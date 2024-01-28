@@ -6,13 +6,13 @@ https://github.com/ludeeus/integration_blueprint
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import InPostAirApiClient
 from .const import DOMAIN
-from .coordinator import BlueprintDataUpdateCoordinator
+from .coordinator import InPostAirDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -23,11 +23,10 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator = BlueprintDataUpdateCoordinator(
+    hass.data[DOMAIN][entry.entry_id] = coordinator = InPostAirDataUpdateCoordinator(
         hass=hass,
         client=InPostAirApiClient(
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
+            machine_id=entry.data[CONF_ID],
             session=async_get_clientsession(hass),
         ),
     )

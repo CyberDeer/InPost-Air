@@ -29,30 +29,19 @@ class InPostAirApiClient:
 
     def __init__(
         self,
-        username: str,
-        password: str,
+        machine_id: str,
         session: aiohttp.ClientSession,
     ) -> None:
         """Sample API Client."""
-        self._username = username
-        self._password = password
+        self._id = machine_id
         self._session = session
 
     async def async_get_data(self) -> any:
         """Get data from the API."""
         return await self._api_wrapper(
-            method="post", 
-            url="https://greencity.pl/shipx-point-data/615/x/air_index_level",
+            method="post",
+            url="https://greencity.pl/shipx-point-data/" + self._id + "/x/air_index_level",
             headers={"X-Requested-With": "XMLHttpRequest"},
-        )
-
-    async def async_set_title(self, value: str) -> any:
-        """Get data from the API."""
-        return await self._api_wrapper(
-            method="patch",
-            url="https://jsonplaceholder.typicode.com/posts/1",
-            data={"title": value},
-            headers={"Content-type": "application/json; charset=UTF-8"},
         )
 
     async def _api_wrapper(
