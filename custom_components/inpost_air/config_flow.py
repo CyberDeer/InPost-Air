@@ -6,9 +6,10 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectOptionDict,
+    SelectSelectorMode
 )
 
 from .api import (
@@ -50,23 +51,28 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_ID],
                     data=user_input,
                 )
+            
+        client = InPostAirApiClient(
+            machine_id=id,
+            session=async_create_clientsession(self.hass),
+        )
+
+        points = await client.async_get_points()
+        options = [SelectOptionDict(value=x['n'], label=f"{x['n']} ({x['d']})") for x in points['items']]
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ID): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    vol.Required(CONF_ID): SelectSelector(
+                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
                     ),
                 }
             ),
             errors=_errors,
         )
 
-    async def _test_credentials(self, id: str) -> None:
+    async def _test_credentials(self, parcel_locker_id: str) -> None:
         """Validate credentials."""
-        client = InPostAirApiClient(
-            machine_id=id,
-            session=async_create_clientsession(self.hass),
-        )
-        await client.async_get_data()
+        # dostanie machine_id
+        await client.async_get_data(machine_id, parcel_locker_id)

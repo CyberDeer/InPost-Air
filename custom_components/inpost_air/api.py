@@ -33,15 +33,28 @@ class InPostAirApiClient:
         session: aiohttp.ClientSession,
     ) -> None:
         """Sample API Client."""
-        self._id = machine_id
         self._session = session
 
-    async def async_get_data(self) -> any:
+    async def async_get_data(self, machine_id, parcel_locker_id) -> any:
         """Get data from the API."""
         return await self._api_wrapper(
             method="post",
-            url="https://greencity.pl/shipx-point-data/" + self._id + "/x/air_index_level",
+            url="https://greencity.pl/shipx-point-data/" + machine_id + "/"+ parcel_locker_id +"/air_index_level",
             headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+
+    async def async_get_points(self) -> any:
+        """Return points"""
+        return await self._api_wrapper(
+            method="get",
+            url="https://greencity.pl/sites/default/files/points.json"
+        )
+
+    async def async_get_parcel_locker_web_details(self, point) -> any:
+        """Get Parcel Locker ID"""
+        return await self._api_wrapper(
+            method="get",
+            url=f"https://greencity.pl/paczkomat-{point['g']}-{point['n']}-{point['e']}-paczkomaty-{point['r']}"
         )
 
     async def _api_wrapper(

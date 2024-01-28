@@ -104,8 +104,8 @@ async def async_setup_entry(
             async_add_entities([InPostAirSensorEntity(coordinator, SENSORS[fetched_sensor])])
         elif "norm" in fetched_sensor:
             async_add_entities([InPostAirSensorEntity(coordinator, InPostAirSensorEntityDescription(property_key=fetched_sensor, name=fetched_sensor.replace('_',' '), native_unit_of_measurement="%"))])
-        # else:
-        #     async_add_entities([InPostAirSensorEntity(coordinator, InPostAirSensorEntityDescription(property_key=fetched_sensor, name=fetched_sensor))])
+        else:
+            async_add_entities([InPostAirSensorEntity(coordinator, InPostAirSensorEntityDescription(property_key=fetched_sensor, name=fetched_sensor))])
             
 class InPostAirSensorEntity(InPostAirEntity, SensorEntity):
     """Defines a InPost sensor entity."""
