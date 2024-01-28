@@ -17,6 +17,7 @@ class InPostAirEntityDescription:
     key: str = None
     name: str = None
     entity_category: str = None
+    property_key: str = None
 
 class InPostAirEntity(CoordinatorEntity[InPostAirDataUpdateCoordinator]):
     """InPostAir class."""
@@ -27,10 +28,11 @@ class InPostAirEntity(CoordinatorEntity[InPostAirDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
         if description:
+            description.key = description.property_key
             self.entity_description = description
-        self._attr_unique_id = description.key
+        self._attr_unique_id = coordinator.client._id + "_" + description.property_key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN)},
+            identifiers={(DOMAIN), coordinator.client._id},
             name=NAME,
             model=VERSION,
             manufacturer=MANUFACTURER,

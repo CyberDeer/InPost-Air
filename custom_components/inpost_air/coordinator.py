@@ -47,3 +47,13 @@ class InPostAirDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(exception) from exception
         except InPostAirApiClientError as exception:
             raise UpdateFailed(exception) from exception
+
+    async def get_sensors(self):
+        results = []
+        results.append("air_index_level")
+        for sensor in self.data.get("air_sensors"):
+            [name, value, norm] = sensor.split(":")
+            results.append(name)
+            if norm:
+                results.append(name + "_norm")
+        return results;
