@@ -1,94 +1,115 @@
-"""Sample API Client."""
-from __future__ import annotations
-
+"""Functions to connect to InPost APIs."""
 import asyncio
-import socket
+import logging
+import re
+from typing import Any
 
-import aiohttp
-import async_timeout
+from aiohttp import ClientResponse
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-class InPostAirApiClientError(Exception):
-    """Exception to indicate a general API error."""
-
-
-class InPostAirApiClientCommunicationError(
-    InPostAirApiClientError
-):
-    """Exception to indicate a communication error."""
+_LOGGER = logging.getLogger(__name__)
 
 
-class InPostAirApiClientAuthenticationError(
-    InPostAirApiClientError
-):
-    """Exception to indicate an authentication error."""
+class ParcelLocker:
+    """ParcelLocker class."""
+
+    def __init__(self, locker_code: str, locker_id: str) -> None:
+        """Init class."""
+        self.locker_code = locker_code
+        self.locker_id = locker_id
 
 
-class InPostAirApiClient:
-    """Sample API Client."""
+class InPostApi:
+    """Helper functions for the Air integration."""
 
-    def __init__(
-        self,
-        machine_id: str,
-        session: aiohttp.ClientSession,
-    ) -> None:
-        """Sample API Client."""
-        self._session = session
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init class."""
+        self.hass = hass
+        self.session = async_create_clientsession(hass)
 
-    async def async_get_data(self, machine_id, parcel_locker_id) -> any:
-        """Get data from the API."""
-        return await self._api_wrapper(
-            method="post",
-            url="https://greencity.pl/shipx-point-data/" + machine_id + "/"+ parcel_locker_id +"/air_index_level",
-            headers={"X-Requested-With": "XMLHttpRequest"},
-        )
-
-    async def async_get_points(self) -> any:
-        """Return points"""
-        return await self._api_wrapper(
-            method="get",
-            url="https://greencity.pl/sites/default/files/points.json"
-        )
-
-    async def async_get_parcel_locker_web_details(self, point) -> any:
-        """Get Parcel Locker ID"""
-        return await self._api_wrapper(
-            method="get",
-            url=f"https://greencity.pl/paczkomat-{point['g']}-{point['n']}-{point['e']}-paczkomaty-{point['r']}"
-        )
-
-    async def _api_wrapper(
+    async def _request(
         self,
         method: str,
         url: str,
-        data: dict | None = None,
         headers: dict | None = None,
-    ) -> any:
+    ) -> ClientResponse:
         """Get information from the API."""
         try:
-            async with async_timeout.timeout(10):
-                response = await self._session.request(
+            async with asyncio.timeout(30):
+                response = await self.session.request(
                     method=method,
                     url=url,
                     headers=headers,
-                    json=data,
                 )
-                if response.status in (401, 403):
-                    raise InPostAirApiClientAuthenticationError(
-                        "Invalid credentials",
-                    )
                 response.raise_for_status()
-                return await response.json()
 
-        except asyncio.TimeoutError as exception:
-            raise InPostAirApiClientCommunicationError(
-                "Timeout error fetching information",
-            ) from exception
-        except (aiohttp.ClientError, socket.gaierror) as exception:
-            raise InPostAirApiClientCommunicationError(
-                "Error fetching information",
-            ) from exception
+                return response
+
+        except TimeoutError:
+            _LOGGER.warning("Request timed out")
         except Exception as exception:  # pylint: disable=broad-except
             raise InPostAirApiClientError(
                 "Something really wrong happened!"
             ) from exception
+
+    async def search_parcel_locker(self, locker_code: str) -> dict[str:Any] | None:
+        """Find info about given parcel locker."""
+        if not locker_code or locker_code == "":
+            return None
+
+        response = await self._request(
+            method="get", url="https://inpost.pl/sites/default/files/points.json"
+        )
+        parcel_locker = next(
+            (
+                x
+                for x in (await response.json()).get("items")
+                if x.get("n") == locker_code
+            ),
+            None,
+        )
+
+        return parcel_locker
+
+    async def find_parcel_locker_id(self, device: ParcelLocker) -> str | None:
+        """Find parcel locker ID by its code."""
+        special_char_map = {
+            ord("ę"): "e",
+            ord("ó"): "o",
+            ord("ą"): "a",
+            ord("ś"): "s",
+            ord("ł"): "l",
+            ord("ż"): "z",
+            ord("ź"): "x",
+            ord("ć"): "c",
+            ord("ń"): "n",
+        }
+        g = device["g"]
+        n = device["n"].lower()
+        e = device["e"].lower().translate(special_char_map)
+        r = device["r"].translate(special_char_map)
+        response = await self._request(
+            method="get",
+            url=f"https://inpost.pl/paczkomat-{g}-{n}-{e}-paczkomaty-{r}",
+        )
+
+        return re.search(
+            r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
+            await response.text(),
+        ).group(1)
+
+    async def get_parcel_locker_air_data(self, locker_code: str, locker_id: str) -> Any:
+        """Get air data from parcel locker."""
+        response = await self._request(
+            method="post",
+            url=f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+
+        return await response.json()
+
+
+class InPostAirApiClientError(Exception):
+    """Exception to indicate a general API error."""

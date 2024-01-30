@@ -1,78 +1,72 @@
-"""Adds config flow for Blueprint."""
+"""Config flow for InPost Air integration."""
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 import voluptuous as vol
+
 from homeassistant import config_entries
-from homeassistant.const import CONF_ID
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectOptionDict,
-    SelectSelectorMode
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
+
+from .api import InPostApi
+from .const import CONF_PARCEL_LOCKER_ID, DOMAIN
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PARCEL_LOCKER_ID): str,
+    }
 )
 
-from .api import (
-    InPostAirApiClient,
-    InPostAirApiClientAuthenticationError,
-    InPostAirApiClientCommunicationError,
-    InPostAirApiClientError,
-)
-from .const import DOMAIN, LOGGER
+_LOGGER = logging.getLogger(__name__)
 
 
-class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    parcel_locker = await InPostApi(hass).search_parcel_locker(
+        data[CONF_PARCEL_LOCKER_ID]
+    )
+
+    if parcel_locker is None:
+        raise UnknownParcelLocker
+
+    return parcel_locker
+
+
+class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for InPost Air."""
 
     VERSION = 1
 
     async def async_step_user(
-        self,
-        user_input: dict | None = None,
-    ) -> config_entries.FlowResult:
-        """Handle a flow initialized by the user."""
-        _errors = {}
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await self._test_credentials(
-                    id=user_input[CONF_ID],
-                )
-            except InPostAirApiClientAuthenticationError as exception:
-                LOGGER.warning(exception)
-                _errors["base"] = "auth"
-            except InPostAirApiClientCommunicationError as exception:
-                LOGGER.error(exception)
-                _errors["base"] = "connection"
-            except InPostAirApiClientError as exception:
-                LOGGER.exception(exception)
-                _errors["base"] = "unknown"
+                parcel_locker = await validate_input(self.hass, user_input)
+
+                await self.async_set_unique_id(parcel_locker["n"])
+                self._abort_if_unique_id_configured()
+            except UnknownParcelLocker:
+                errors["base"] = "unknown_parcel_locker"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_ID],
-                    data=user_input,
+                    title=f"Parcel locker {parcel_locker['n']}", data=parcel_locker
                 )
-            
-        client = InPostAirApiClient(
-            machine_id=id,
-            session=async_create_clientsession(self.hass),
-        )
-
-        points = await client.async_get_points()
-        options = [SelectOptionDict(value=x['n'], label=f"{x['n']} ({x['d']})") for x in points['items']]
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ID): SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
-                    ),
-                }
-            ),
-            errors=_errors,
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
-    async def _test_credentials(self, parcel_locker_id: str) -> None:
-        """Validate credentials."""
-        # dostanie machine_id
-        await client.async_get_data(machine_id, parcel_locker_id)
+
+class UnknownParcelLocker(HomeAssistantError):
+    """Parcel locker with that ID doesn't exist."""
