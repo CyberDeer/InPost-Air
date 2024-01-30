@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Urządzenie jest już skonfigurowane"
         },
         "error": {
-            "unknown_parcel_locker": "Couldn't find parcel locker with this ID"
+            "unknown_parcel_locker": "Nie udało się znaleźć paczkomatu z tym kodem"
         },
         "step": {
             "user": {
                 "data": {
-                    "parcelLockerId": "Parcel Locker ID"
+                    "parcelLockerId": "Kod paczkomatu"
                 }
             }
         }
@@ -17,7 +17,7 @@
     "entity": {
         "sensor": {
             "humidity": {
-                "name": "Humidity"
+                "name": "Wilgotność"
             },
             "no2": {
                 "name": "NO2"
@@ -32,22 +32,22 @@
                 "name": "PM 10"
             },
             "pm10_norm": {
-                "name": "PM 10 norm"
+                "name": "Norma PM 10"
             },
             "pm25": {
                 "name": "PM 2.5"
             },
             "pm25_norm": {
-                "name": "PM 2.5 norm"
+                "name": "Norma PM 2.5"
             },
             "pm4": {
                 "name": "PM 4"
             },
             "pressure": {
-                "name": "Pressure"
+                "name": "Ciśnienie"
             },
             "temperature": {
-                "name": "Temperature"
+                "name": "Temperatura"
             }
         }
     }

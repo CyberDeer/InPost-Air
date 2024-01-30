@@ -2,11 +2,18 @@
   "domain": "inpost_air",
   "name": "InPost Air",
   "codeowners": [
-    "@mbober"
+    "@mbober",
+    "@ceski23",
+    "@mikart143"
   ],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/mbober1/InPost-Air",
+  "homekit": {},
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mbober1/InPost-Air/issues",
-  "version": "0.0.1"
+  "requirements": [],
+  "ssdp": [],
+  "version": "0.0.1",
+  "zeroconf": []
 }

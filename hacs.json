@@ -2,7 +2,7 @@
     "name": "InPost Air",
     "filename": "inpostair.zip",
     "hide_default_branch": true,
-    "homeassistant": "2023.8.0",
+    "homeassistant": "2024.1.1",
     "render_readme": true,
     "zip_release": true
 }

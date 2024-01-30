@@ -1,0 +1,54 @@
+{
+	"config": {
+		"step": {
+			"user": {
+				"data": {
+					"parcelLockerId": "Parcel Locker ID"
+				}
+			}
+		},
+		"error": {
+			"unknown_parcel_locker": "Couldn't find parcel locker with this ID"
+		},
+		"abort": {
+			"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+		}
+	},
+	"entity": {
+		"sensor": {
+			"temperature": {
+				"name": "Temperature"
+			},
+			"pressure": {
+				"name": "Pressure"
+			},
+			"humidity": {
+				"name": "Humidity"
+			},
+			"pm4": {
+				"name": "PM 4"
+			},
+			"pm25": {
+				"name": "PM 2.5"
+			},
+			"pm25_norm": {
+				"name": "PM 2.5 norm"
+			},
+			"pm1": {
+				"name": "PM 1"
+			},
+			"pm10": {
+				"name": "PM 10"
+			},
+			"pm10_norm": {
+				"name": "PM 10 norm"
+			},
+			"no2": {
+				"name": "NO2"
+			},
+			"o3": {
+				"name": "O3"
+			}
+		}
+	}
+}
