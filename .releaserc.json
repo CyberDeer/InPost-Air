@@ -1,0 +1,29 @@
+{
+    "repositoryUrl": "https://github.com/CyberDeer/InPost-Air.git",
+    "branches": [
+        "master"
+    ],
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        "@semantic-release/changelog",
+        [
+            "@semantic-release/exec",
+            {
+                "prepareCmd": "node changeVersion.mjs ${nextRelease.version}"
+            }
+        ],
+        [
+            "@semantic-release/git",
+            {
+                "message": "chore(release): ${nextRelease.version} [skip ci]",
+                "assets": [
+                    "CHANGELOG.md",
+                    "custom_components/inpost_air/manifest.json"
+                ]
+            }
+        ],
+        "@semantic-release/github"
+    ],
+    "dryRun": true
+}
