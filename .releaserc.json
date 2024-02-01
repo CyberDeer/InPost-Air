@@ -23,7 +23,17 @@
                 ]
             }
         ],
-        "@semantic-release/github"
+        [
+            "@semantic-release/github",
+            {
+                "assets": [
+                    {
+                        "path": "release.zip",
+                        "label": "Release archive"
+                    }
+                ]
+            }
+        ]
     ],
     "dryRun": true
 }
