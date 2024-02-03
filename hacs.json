@@ -1,7 +1,7 @@
 {
     "name": "InPost Air",
     "hide_default_branch": true,
-    "homeassistant": "2024.1.1",
+    "homeassistant": "2023.12.4",
     "render_readme": true,
     "zip_release": true,
     "filename": "release.zip"
