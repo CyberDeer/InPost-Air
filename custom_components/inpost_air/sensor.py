@@ -34,10 +34,20 @@ _LOGGER = logging.getLogger(__name__)
 class ParcelLockerSensorEntityDescription(SensorEntityDescription):
     """Describes Example sensor entity."""
 
-    exists_fn: Callable[[dict[str, ValueWithNorm | ValueWithoutNorm]], bool] = (
-        lambda _: True
-    )
+    exists_fn: Callable[[dict[str, ValueWithNorm | ValueWithoutNorm]], bool] = None
     value_fn: Callable[[dict[str, ValueWithNorm | ValueWithoutNorm]], StateType]
+
+    def __post_init__(self):
+        """Post init."""
+        self.exists_fn = (
+            (
+                lambda data: item.value is not None
+                if (item := data.get(self.key)) is not None
+                else None
+            )
+            if self.exists_fn is None
+            else self.exists_fn
+        )
 
 
 SENSORS_DESCRIPTIONS = [
@@ -61,6 +71,9 @@ SENSORS_DESCRIPTIONS = [
         key=Entities.PM2_5_Norm,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
+        exists_fn=lambda data: item.value is not None
+        if (item := data.get(Entities.PM10)) is not None
+        else None,
         value_fn=lambda data: item.norm if (item := data.get(Entities.PM2_5)) else None,
     ),
     ParcelLockerSensorEntityDescription(
@@ -95,6 +108,9 @@ SENSORS_DESCRIPTIONS = [
         key=Entities.PM10_Norm,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
+        exists_fn=lambda data: item.value is not None
+        if (item := data.get(Entities.PM10)) is not None
+        else None,
         value_fn=lambda data: item.norm if (item := data.get(Entities.PM10)) else None,
     ),
     ParcelLockerSensorEntityDescription(
@@ -166,6 +182,7 @@ async def async_setup_entry(
         [
             ParcelLockerSensorEntity(coordinator, parcel_locker, description)
             for description in SENSORS_DESCRIPTIONS
+            if description.exists_fn(coordinator.data)
         ],
         update_before_add=True,
     )
