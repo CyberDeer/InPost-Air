@@ -4,7 +4,8 @@
             "already_configured": "Urządzenie jest już skonfigurowane"
         },
         "error": {
-            "unknown_parcel_locker": "Nie udało się znaleźć paczkomatu z tym kodem"
+            "unknown_parcel_locker": "Nie udało się znaleźć paczkomatu z tym kodem",
+            "parcel_locker_no_data": "Ten paczkomat nie udostępnia danych o jakości powietrza"
         },
         "step": {
             "user": {

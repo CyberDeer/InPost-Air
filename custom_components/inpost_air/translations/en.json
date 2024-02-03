@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
+            "parcel_locker_no_data": "This parcel locker doesn't have air quality data",
             "unknown_parcel_locker": "Couldn't find parcel locker with this ID"
         },
         "step": {
