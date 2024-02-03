@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/CyberDeer/InPost-Air/compare/v1.1.0...v1.1.1) (2024-02-03)
+
+
+### Bug Fixes
+
+* handle parcel lockers without air quality data ([#3](https://github.com/CyberDeer/InPost-Air/issues/3)) ([295e214](https://github.com/CyberDeer/InPost-Air/commit/295e214acdcbd7e35b9c585b729a8a8d63765836))
+
 # [1.1.0](https://github.com/CyberDeer/InPost-Air/compare/v1.0.1...v1.1.0) (2024-02-03)
 
 
