@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/CyberDeer/InPost-Air/compare/v1.0.1...v1.1.0) (2024-02-03)
+
+
+### Features
+
+* hide unavailable entities ([#2](https://github.com/CyberDeer/InPost-Air/issues/2)) ([d162e7a](https://github.com/CyberDeer/InPost-Air/commit/d162e7aec2d6aa88d6e401132dea409bb27626db))
+
 ## [1.0.1](https://github.com/CyberDeer/InPost-Air/compare/v1.0.0...v1.0.1) (2024-02-01)
 
 
