@@ -8,7 +8,6 @@ __pycache__
 
 # misc
 .coverage
-.vscode
 coverage.xml
 
 
@@ -16,4 +15,8 @@ coverage.xml
 config/*
 !config/configuration.yaml
 
-venv/*
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.env
