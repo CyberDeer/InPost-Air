@@ -10,7 +10,7 @@
         [
             "@semantic-release/exec",
             {
-                "prepareCmd": "node changeVersion.mjs ${nextRelease.version}"
+                "prepareCmd": "yq -i -o json '.version=\"${nextRelease.version}\"' ./custom_components/inpost_air/manifest.json"
             }
         ],
         [
