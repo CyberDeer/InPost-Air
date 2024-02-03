@@ -28,12 +28,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    parcel_locker = await InPostApi(hass).search_parcel_locker(
-        data[CONF_PARCEL_LOCKER_ID]
-    )
+    api_client = InPostApi(hass)
+    parcel_locker = await api_client.search_parcel_locker(data[CONF_PARCEL_LOCKER_ID])
 
     if parcel_locker is None:
         raise UnknownParcelLocker
+
+    try:
+        await api_client.find_parcel_locker_id(parcel_locker)
+    except Exception:
+        raise ParcelLockerWithoutAirData
 
     return parcel_locker
 
@@ -56,6 +60,8 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
             except UnknownParcelLocker:
                 errors["base"] = "unknown_parcel_locker"
+            except ParcelLockerWithoutAirData:
+                errors["base"] = "parcel_locker_no_data"
             else:
                 return self.async_create_entry(
                     title=f"Parcel locker {parcel_locker['n']}", data=parcel_locker
@@ -70,3 +76,7 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class UnknownParcelLocker(HomeAssistantError):
     """Parcel locker with that ID doesn't exist."""
+
+
+class ParcelLockerWithoutAirData(HomeAssistantError):
+    """Parcel locker with that ID doesn't have air data."""
