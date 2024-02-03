@@ -29,7 +29,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     api_client = InPostApi(hass)
-    parcel_locker = await api_client.search_parcel_locker(data[CONF_PARCEL_LOCKER_ID])
+    parcel_locker = await api_client.search_parcel_locker(
+        data[CONF_PARCEL_LOCKER_ID].upper()
+    )
 
     if parcel_locker is None:
         raise UnknownParcelLocker
