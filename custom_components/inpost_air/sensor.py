@@ -161,10 +161,6 @@ class ParcelLockerSensorEntity(CoordinatorEntity, SensorEntity):
             manufacturer="InPost",
         )
 
-        _LOGGER.debug(entity_description)
-        _LOGGER.debug(entity_description.key)
-        _LOGGER.debug(self.translation_key)
-
     @callback
     def _handle_coordinator_update(self) -> None:
         self._attr_native_value = self.entity_description.value_fn(
