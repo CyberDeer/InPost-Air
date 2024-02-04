@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/CyberDeer/InPost-Air/compare/v1.1.1...v1.2.0) (2024-02-04)
+
+
+### Bug Fixes
+
+* improve creation of release archive ([8a13958](https://github.com/CyberDeer/InPost-Air/commit/8a13958bf17b76a6e9949f9a6187dc8004ace13e))
+
+
+### Features
+
+* improve config flow user input handling ([10add37](https://github.com/CyberDeer/InPost-Air/commit/10add37690184e9a3d111bfc4d543968b8434d7b))
+
 ## [1.1.1](https://github.com/CyberDeer/InPost-Air/compare/v1.1.0...v1.1.1) (2024-02-03)
 
 
