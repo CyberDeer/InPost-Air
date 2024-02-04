@@ -18,7 +18,9 @@ jobs:
               uses: actions/checkout@v3
 
             - name: Zip artifact for deployment
-              run: zip -j release.zip ./custom_components/inpost_air/*
+              run: |
+                  cd custom_components/inpost_air
+                  zip -r release.zip ./
 
             - name: Semantic Release
               id: semantic-release

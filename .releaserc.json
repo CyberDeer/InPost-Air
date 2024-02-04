@@ -28,7 +28,7 @@
             {
                 "assets": [
                     {
-                        "path": "release.zip",
+                        "path": "custom_components/inpost_air/release.zip",
                         "label": "Release archive"
                     }
                 ]
