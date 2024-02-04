@@ -1,5 +1,6 @@
 """Config flow for InPost Air integration."""
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import Any
@@ -10,17 +11,25 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectOptionDict,
+)
+
 
 from .api import InPostApi
 from .const import CONF_PARCEL_LOCKER_ID, DOMAIN
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PARCEL_LOCKER_ID): str,
-    }
-)
+from .utils import haversine
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class SimpleParcelLocker:
+    code: str
+    description: str
+    distance: float
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -69,9 +78,39 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=f"Parcel locker {parcel_locker['n']}", data=parcel_locker
                 )
 
+        parcel_lockers = [
+            SimpleParcelLocker(
+                code=locker["n"],
+                description=locker["d"],
+                distance=haversine(
+                    self.hass.config.longitude,
+                    self.hass.config.latitude,
+                    locker["l"]["o"],
+                    locker["l"]["a"],
+                ),
+            )
+            for locker in await InPostApi(self.hass).get_parcel_lockers_list()
+        ]
+        options = [
+            SelectOptionDict(
+                label=f"{locker.code} [{locker.distance:.2f}km] ({locker.description})",
+                value=locker.code,
+            )
+            for locker in sorted(parcel_lockers, key=lambda locker: locker.distance)
+        ]
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PARCEL_LOCKER_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options,
+                            custom_value=True,
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 

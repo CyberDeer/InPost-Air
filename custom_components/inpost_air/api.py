@@ -73,6 +73,15 @@ class InPostApi:
 
         return parcel_locker
 
+    async def get_parcel_lockers_list(self) -> list[dict[str:Any]]:
+        """Get parcel lockers list."""
+        response = await self._request(
+            method="get", url="https://inpost.pl/sites/default/files/points.json"
+        )
+        json_data = await response.json()
+
+        return json_data.get("items")
+
     async def find_parcel_locker_id(self, device: ParcelLocker) -> str | None:
         """Find parcel locker ID by its code."""
         special_char_map = {
