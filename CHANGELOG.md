@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/CyberDeer/InPost-Air/compare/v1.2.0...v1.3.0) (2024-02-08)
+
+
+### Features
+
+* sort parcel lockers by distance in config flow ([fbe5f1e](https://github.com/CyberDeer/InPost-Air/commit/fbe5f1e4864384ba32012141e651d4ece5277654))
+
 # [1.2.0](https://github.com/CyberDeer/InPost-Air/compare/v1.1.1...v1.2.0) (2024-02-04)
 
 
