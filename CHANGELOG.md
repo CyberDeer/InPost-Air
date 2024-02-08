@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/CyberDeer/InPost-Air/compare/v1.3.0...v1.3.1) (2024-02-08)
+
+
+### Bug Fixes
+
+* fix parcel locker validation ([139a751](https://github.com/CyberDeer/InPost-Air/commit/139a7511244cce1372e000735c8077a4f20d735b))
+
 # [1.3.0](https://github.com/CyberDeer/InPost-Air/compare/v1.2.0...v1.3.0) (2024-02-08)
 
 
