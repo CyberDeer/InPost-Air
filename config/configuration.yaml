@@ -6,3 +6,8 @@ logger:
   default: info
   logs:
     custom_components.inpost_air: debug
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - ::1
