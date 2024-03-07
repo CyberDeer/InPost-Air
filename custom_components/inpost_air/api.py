@@ -97,7 +97,7 @@ class InPostApi:
         }
         g = device["g"]
         n = device["n"].lower()
-        e = device["e"].lower().translate(special_char_map)
+        e = device["e"].lower().translate(special_char_map).replace(" ", "-")
         r = device["r"].translate(special_char_map)
         response = await self._request(
             method="get",
