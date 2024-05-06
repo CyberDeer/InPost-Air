@@ -26,6 +26,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .api import InPostApi, ParcelLocker
 from .const import DOMAIN, Entities
 from .coordinator import InPostAirDataCoordinator, ValueWithNorm, ValueWithoutNorm
+from .aqi.polish import PolishAirQualityIndexSensor
+from .aqi.european import EuropeanAirQualityIndexSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,16 +175,22 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Setups sensors from config entry."""
-    parcel_locker = hass.data[DOMAIN][entry.entry_id]
+    parcel_locker: ParcelLocker = hass.data[DOMAIN][entry.entry_id]
     coordinator = InPostAirDataCoordinator(hass, InPostApi(hass), parcel_locker)
 
     await coordinator.async_config_entry_first_refresh()
 
+    base_sensors = [
+        ParcelLockerSensorEntity(coordinator, parcel_locker, description)
+        for description in SENSORS_DESCRIPTIONS
+        if description.exists_fn(coordinator.data)
+    ]
+
     async_add_entities(
         [
-            ParcelLockerSensorEntity(coordinator, parcel_locker, description)
-            for description in SENSORS_DESCRIPTIONS
-            if description.exists_fn(coordinator.data)
+            *base_sensors,
+            PolishAirQualityIndexSensor(parcel_locker),
+            EuropeanAirQualityIndexSensor(parcel_locker),
         ],
         update_before_add=True,
     )
