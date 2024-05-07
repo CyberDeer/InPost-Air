@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/CyberDeer/InPost-Air/compare/v1.3.2...v1.4.0) (2024-05-07)
+
+
+### Features
+
+* add air quality index sensors ([f16ca43](https://github.com/CyberDeer/InPost-Air/commit/f16ca43f2e5001aa8ee88c4b78f03c5c61f549cf))
+
 ## [1.3.2](https://github.com/CyberDeer/InPost-Air/compare/v1.3.1...v1.3.2) (2024-03-07)
 
 
