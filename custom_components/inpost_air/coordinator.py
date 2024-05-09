@@ -67,7 +67,7 @@ class InPostAirDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="My sensor",
+            name=f"Parcel Locker {parcel_locker.locker_code} data coordinator",
             update_interval=timedelta(minutes=5),
         )
         self.api_client = api_client

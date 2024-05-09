@@ -1,58 +1,34 @@
 """Sensor utilities and definitions."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-import logging
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from custom_components.inpost_air.sensors.aqi.european import (
+    EuropeanAirQualityIndexSensor,
+)
+from custom_components.inpost_air.sensors.aqi.polish import PolishAirQualityIndexSensor
+from custom_components.inpost_air.sensors.parcel_locker_sensor import (
+    ParcelLockerSensor,
+    ParcelLockerSensorEntityDescription,
+)
+
 
 from .api import InPostApi, ParcelLocker
 from .const import DOMAIN, Entities
-from .coordinator import InPostAirDataCoordinator, ValueWithNorm, ValueWithoutNorm
-from .aqi.polish import PolishAirQualityIndexSensor
-from .aqi.european import EuropeanAirQualityIndexSensor
+from .coordinator import InPostAirDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(kw_only=True)
-class ParcelLockerSensorEntityDescription(SensorEntityDescription):
-    """Describes Example sensor entity."""
-
-    exists_fn: Callable[[dict[str, ValueWithNorm | ValueWithoutNorm]], bool] = None
-    value_fn: Callable[[dict[str, ValueWithNorm | ValueWithoutNorm]], StateType]
-
-    def __post_init__(self):
-        """Post init."""
-        self.exists_fn = (
-            (
-                lambda data: item.value is not None
-                if (item := data.get(self.key)) is not None
-                else None
-            )
-            if self.exists_fn is None
-            else self.exists_fn
-        )
-
-
-SENSORS_DESCRIPTIONS = [
+# pylint: disable=locally-disabled, unexpected-keyword-arg
+PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.Temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -136,41 +112,6 @@ SENSORS_DESCRIPTIONS = [
 ]
 
 
-class ParcelLockerSensorEntity(CoordinatorEntity, SensorEntity):
-    """Represent an Example sensor."""
-
-    entity_description: ParcelLockerSensorEntityDescription
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator,
-        device: ParcelLocker,
-        entity_description: ParcelLockerSensorEntityDescription,
-    ) -> None:
-        """Set up the instance."""
-        super().__init__(coordinator, context=device)
-
-        self._device = device
-        self.entity_description = entity_description
-        self._attr_has_entity_name = True
-        self._attr_unique_id = f"{device.locker_code}_{entity_description.key}"
-        self._attr_suggested_display_precision = 2
-        self._attr_translation_key = entity_description.key.lower()
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.locker_code, device.locker_id)},
-            name=f"Parcel locker {device.locker_code}",
-            manufacturer="InPost",
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
-        self.async_write_ha_state()
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -181,8 +122,8 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     base_sensors = [
-        ParcelLockerSensorEntity(coordinator, parcel_locker, description)
-        for description in SENSORS_DESCRIPTIONS
+        ParcelLockerSensor(coordinator, parcel_locker, description)
+        for description in PARCEL_LOCKER_SENSORS
         if description.exists_fn(coordinator.data)
     ]
 
