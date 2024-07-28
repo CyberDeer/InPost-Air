@@ -54,9 +54,17 @@ class AirQualityIndexSensor(SensorEntity):
         Retrieves data from sensors for the specified time period.
         """
         device = device_registry.async_get(self.hass).async_get_device(
-            identifiers=self.device_info.get("identifiers"),
-            connections=self.device_info.get("connections"),
+            identifiers=self.device_info.get("identifiers")
+            if self.device_info is not None
+            else None,
+            connections=self.device_info.get("connections")
+            if self.device_info is not None
+            else None,
         )
+
+        if device is None:
+            return []
+
         entities = dict(
             map(
                 lambda entity: (
@@ -75,10 +83,10 @@ class AirQualityIndexSensor(SensorEntity):
             for (entity_key, hours) in sensors
             if entity_key in entities
         ]
-        values = await recorder.get_instance(self.hass).async_add_executor_job(
+        values = await recorder.get_instance(self.hass).async_add_executor_job(  # type: ignore
             lambda: [
                 (
-                    Entities(entity.translation_key.upper()),
+                    Entities(entity.translation_key.upper()),  # type: ignore
                     self.get_last_n_hours_data(entity.entity_id, hours),
                 )
                 for (entity, hours) in available_entities

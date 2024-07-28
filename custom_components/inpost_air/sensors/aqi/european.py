@@ -100,15 +100,14 @@ class EuropeanAirQualityIndexSensor(AirQualityIndexSensor):
         mean_data = [
             (entity, statistics.fmean(x)) for (entity, x) in sensors_data if len(x) > 0
         ]
-        sub_indexes = list(
-            filter(
-                lambda item: item is not None,
-                map(self.calculate_sub_index, mean_data),
-            )
-        )
+        sub_indices = [
+            sub_index
+            for sub_index in map(self.calculate_sub_index, mean_data)
+            if sub_index is not None
+        ]
 
         self._attr_native_value = (
-            EuropeanAirQualityIndexCategory(max(sub_indexes)).name
-            if len(sub_indexes) > 0
+            EuropeanAirQualityIndexCategory(max(sub_indices)).name
+            if len(sub_indices) > 0
             else None
         )

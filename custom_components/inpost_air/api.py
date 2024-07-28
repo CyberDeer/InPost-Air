@@ -1,15 +1,64 @@
 """Functions to connect to InPost APIs."""
 import asyncio
+from dataclasses import dataclass
 import logging
 import re
-from typing import Any
-
 from aiohttp import ClientResponse
-
+from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class InPostAirPointCoordinates:
+    """
+    Represents the coordinates of an InPost Air point.
+
+    Attributes:
+        a (float): The latitude coordinate.
+        o (float): The longitude coordinate.
+    """
+
+    a: float
+    o: float
+
+
+@dataclass
+class InPostAirPoint:
+    n: str
+    t: int
+    d: str
+    m: str
+    q: str
+    f: str
+    c: str
+    g: str
+    e: str
+    r: str
+    o: str
+    b: str
+    h: str
+    i: str
+    l: InPostAirPointCoordinates
+    p: int
+    s: int
+
+
+@dataclass
+class ParcelLockerListResponse:
+    date: str
+    page: int
+    total_pages: int
+    items: list[InPostAirPoint]
+
+
+@dataclass
+class ParcelLockerAirDataResponse:
+    message: str
+    air_index_level: str
+    air_sensors: list[str]
 
 
 class ParcelLocker:
@@ -47,14 +96,15 @@ class InPostApi:
 
                 return response
 
-        except TimeoutError:
+        except TimeoutError as e:
             _LOGGER.warning("Request timed out")
+            raise InPostAirApiClientError("Request timed out") from e
         except Exception as exception:  # pylint: disable=broad-except
             raise InPostAirApiClientError(
                 "Something really wrong happened!"
             ) from exception
 
-    async def search_parcel_locker(self, locker_code: str) -> dict[str:Any] | None:
+    async def search_parcel_locker(self, locker_code: str) -> InPostAirPoint | None:
         """Find info about given parcel locker."""
         if not locker_code or locker_code == "":
             return None
@@ -71,18 +121,18 @@ class InPostApi:
             None,
         )
 
-        return parcel_locker
+        return from_dict(InPostAirPoint, parcel_locker) if parcel_locker else None
 
-    async def get_parcel_lockers_list(self) -> list[dict[str:Any]]:
+    async def get_parcel_lockers_list(self) -> list[InPostAirPoint]:
         """Get parcel lockers list."""
         response = await self._request(
             method="get", url="https://greencity.pl/sites/default/files/points.json"
         )
-        json_data = await response.json()
+        response_data = from_dict(ParcelLockerListResponse, await response.json())
 
-        return json_data.get("items")
+        return response_data.items
 
-    async def find_parcel_locker_id(self, device: ParcelLocker) -> str | None:
+    async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
         """Find parcel locker ID by its code."""
         special_char_map = {
             ord("ę"): "e",
@@ -95,21 +145,24 @@ class InPostApi:
             ord("ć"): "c",
             ord("ń"): "n",
         }
-        g = device["g"]
-        n = device["n"].lower()
-        e = device["e"].lower().translate(special_char_map).replace(" ", "-")
-        r = device["r"].translate(special_char_map)
+        g = point.g
+        n = point.n.lower()
+        e = point.e.lower().translate(special_char_map).replace(" ", "-")
+        r = point.r.translate(special_char_map)
         response = await self._request(
             method="get",
             url=f"https://greencity.pl/paczkomat-{g}-{n}-{e}-paczkomaty-{r}",
         )
-
-        return re.search(
+        match = re.search(
             r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
             await response.text(),
-        ).group(1)
+        )
 
-    async def get_parcel_locker_air_data(self, locker_code: str, locker_id: str) -> Any:
+        return None if match is None else match.group(1)
+
+    async def get_parcel_locker_air_data(
+        self, locker_code: str, locker_id: str
+    ) -> ParcelLockerAirDataResponse:
         """Get air data from parcel locker."""
         response = await self._request(
             method="post",
@@ -117,7 +170,7 @@ class InPostApi:
             headers={"X-Requested-With": "XMLHttpRequest"},
         )
 
-        return await response.json()
+        return from_dict(ParcelLockerAirDataResponse, await response.json())
 
 
 class InPostAirApiClientError(Exception):

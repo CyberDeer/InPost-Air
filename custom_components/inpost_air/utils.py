@@ -1,6 +1,6 @@
 from math import asin, cos, radians, sin, sqrt
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from custom_components.inpost_air.api import ParcelLocker
 from custom_components.inpost_air.const import DOMAIN
@@ -40,7 +40,10 @@ def get_device_info(parcel_locker: ParcelLocker) -> DeviceInfo:
     Get the device information for a given parcel locker.
     """
     return DeviceInfo(
-        identifiers={(DOMAIN, parcel_locker.locker_code, parcel_locker.locker_id)},
+        identifiers={
+            (DOMAIN, parcel_locker.locker_code),
+            (DOMAIN, parcel_locker.locker_id),
+        },
         name=f"Parcel locker {parcel_locker.locker_code}",
         manufacturer="InPost",
     )

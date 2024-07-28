@@ -1,9 +1,8 @@
 """Sensor utilities and definitions."""
 
-from homeassistant.components.sensor import (
+from homeassistant.components.sensor.const import (
     SensorDeviceClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -12,7 +11,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
+from custom_components.inpost_air import InPostAirConfiEntry
+from custom_components.inpost_air.coordinator import ValueWithNorm
 from custom_components.inpost_air.sensors.aqi.european import (
     EuropeanAirQualityIndexSensor,
 )
@@ -21,11 +21,7 @@ from custom_components.inpost_air.sensors.parcel_locker_sensor import (
     ParcelLockerSensor,
     ParcelLockerSensorEntityDescription,
 )
-
-
-from .api import InPostApi, ParcelLocker
-from .const import DOMAIN, Entities
-from .coordinator import InPostAirDataCoordinator
+from .const import Entities
 
 # pylint: disable=locally-disabled, unexpected-keyword-arg
 PARCEL_LOCKER_SENSORS = [
@@ -51,8 +47,10 @@ PARCEL_LOCKER_SENSORS = [
         icon="mdi:percent",
         exists_fn=lambda data: item.value is not None
         if (item := data.get(Entities.PM10)) is not None
+        else False,
+        value_fn=lambda data: item.norm
+        if (item := data.get(Entities.PM2_5)) and isinstance(item, ValueWithNorm)
         else None,
-        value_fn=lambda data: item.norm if (item := data.get(Entities.PM2_5)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.Pressure,
@@ -88,8 +86,10 @@ PARCEL_LOCKER_SENSORS = [
         icon="mdi:percent",
         exists_fn=lambda data: item.value is not None
         if (item := data.get(Entities.PM10)) is not None
+        else False,
+        value_fn=lambda data: item.norm
+        if (item := data.get(Entities.PM10)) and isinstance(item, ValueWithNorm)
         else None,
-        value_fn=lambda data: item.norm if (item := data.get(Entities.PM10)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM4,
@@ -113,11 +113,13 @@ PARCEL_LOCKER_SENSORS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: InPostAirConfiEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups sensors from config entry."""
-    parcel_locker: ParcelLocker = hass.data[DOMAIN][entry.entry_id]
-    coordinator = InPostAirDataCoordinator(hass, InPostApi(hass), parcel_locker)
+    parcel_locker = entry.runtime_data.parcel_locker
+    coordinator = entry.runtime_data.coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
