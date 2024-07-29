@@ -86,9 +86,7 @@ class InPostAirDataCoordinator(DataUpdateCoordinator):
                 )
 
                 return {
-                    x.name: x
-                    for line in data["air_sensors"]
-                    if (x := create_value(line))
+                    x.name: x for line in data.air_sensors if (x := create_value(line))
                 }
         except Exception as err:
             raise UpdateFailed("Error communicating with API") from err

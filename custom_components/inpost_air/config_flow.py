@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
 )
 
 
-from .api import InPostApi
+from .api import InPostAirPoint, InPostApi
 from .const import CONF_PARCEL_LOCKER_ID, DOMAIN
 from .utils import haversine
 
@@ -32,7 +32,7 @@ class SimpleParcelLocker:
     distance: float
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> InPostAirPoint:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -47,8 +47,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await api_client.find_parcel_locker_id(parcel_locker)
-    except Exception:
-        raise ParcelLockerWithoutAirData
+    except Exception as exc:
+        raise ParcelLockerWithoutAirData from exc
 
     return parcel_locker
 
@@ -56,7 +56,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for InPost Air."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,7 +68,7 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 parcel_locker = await validate_input(self.hass, user_input)
 
-                await self.async_set_unique_id(parcel_locker["n"])
+                await self.async_set_unique_id(parcel_locker.n)
                 self._abort_if_unique_id_configured()
             except UnknownParcelLocker:
                 errors["base"] = "unknown_parcel_locker"
@@ -75,18 +76,19 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "parcel_locker_no_data"
             else:
                 return self.async_create_entry(
-                    title=f"Parcel locker {parcel_locker['n']}", data=parcel_locker
+                    title=f"Parcel locker {parcel_locker.n}",
+                    data={"parcel_locker": parcel_locker},
                 )
 
         parcel_lockers = [
             SimpleParcelLocker(
-                code=locker["n"],
-                description=locker["d"],
+                code=locker.n,
+                description=locker.d,
                 distance=haversine(
                     self.hass.config.longitude,
                     self.hass.config.latitude,
-                    locker["l"]["o"],
-                    locker["l"]["a"],
+                    locker.l.o,
+                    locker.l.a,
                 ),
             )
             for locker in await InPostApi(self.hass).get_parcel_lockers_list()
