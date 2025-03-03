@@ -36,7 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     entry_data = entry.data.get("parcel_locker")
 
     if (
-        point := None if entry_data is None else from_dict(InPostAirPoint, entry_data)
+        point := None
+        if entry_data is None
+        else entry_data
+        if isinstance(entry_data, InPostAirPoint)
+        else from_dict(InPostAirPoint, entry_data)
     ) is None:
         return False
 

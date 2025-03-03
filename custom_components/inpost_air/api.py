@@ -7,6 +7,7 @@ from aiohttp import ClientResponse
 from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from slugify import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,24 +135,13 @@ class InPostApi:
 
     async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
         """Find parcel locker ID by its code."""
-        special_char_map = {
-            ord("ę"): "e",
-            ord("ó"): "o",
-            ord("ą"): "a",
-            ord("ś"): "s",
-            ord("ł"): "l",
-            ord("ż"): "z",
-            ord("ź"): "x",
-            ord("ć"): "c",
-            ord("ń"): "n",
-        }
-        g = point.g
-        n = point.n.lower()
-        e = point.e.lower().translate(special_char_map).replace(" ", "-")
-        r = point.r.translate(special_char_map)
+        pathname = slugify(
+            f"paczkomat-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
+            lowercase=True,
+        )
         response = await self._request(
             method="get",
-            url=f"https://greencity.pl/paczkomat-{g}-{n}-{e}-paczkomaty-{r}",
+            url=f"https://greencity.pl/{pathname}",
         )
         match = re.search(
             r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
