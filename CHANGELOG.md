@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/CyberDeer/InPost-Air/compare/v1.4.0...v1.5.0) (2025-03-03)
+
+
+### Bug Fixes
+
+* fix creation of url to find parcel locker id (fix [#12](https://github.com/CyberDeer/InPost-Air/issues/12)) ([#13](https://github.com/CyberDeer/InPost-Air/issues/13)) ([eb3f6d1](https://github.com/CyberDeer/InPost-Air/commit/eb3f6d1cd8c9841f019082e0d9ab18278ee5c13f))
+
+
+### Features
+
+* store runtime data inside the config entry, improve typings ([#10](https://github.com/CyberDeer/InPost-Air/issues/10)) ([1e4db35](https://github.com/CyberDeer/InPost-Air/commit/1e4db3568bbb6b2ba68967c3292afff7cd253bfb))
+
 # [1.4.0](https://github.com/CyberDeer/InPost-Air/compare/v1.3.2...v1.4.0) (2024-05-07)
 
 
