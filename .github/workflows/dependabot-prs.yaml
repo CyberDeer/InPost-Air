@@ -28,14 +28,13 @@ jobs:
       - name: Update dependencies
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
         run: |
-          uv lock
           yq -i -o json ".requirements=$(yq -o json '.project.dependencies' pyproject.toml)" ./custom_components/inpost_air/manifest.json
 
       - name: Push updated version
         uses: stefanzweifel/git-auto-commit-action@v5
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
         with:
-          file_pattern: "./custom_components/inpost_air/manifest.json uv.lock"
+          file_pattern: "./custom_components/inpost_air/manifest.json"
           commit_message: "chore(deps): update dependencies in manifest.json"
           commit_user_name: dependabot[bot]
           commit_user_email: 49699333+dependabot[bot]@users.noreply.github.com
