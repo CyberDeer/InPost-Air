@@ -23,13 +23,20 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Update dependencies in manifest.json
+        id: manifest-update
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
         run: |
           REQUIREMENTS=$(yq -o json '.project.dependencies' pyproject.toml)
           yq -i -o json ".requirements=${REQUIREMENTS}" ./custom_components/inpost_air/manifest.json
 
+          if [ -z "$(git status --porcelain=v1 ./custom_components/inpost_air/manifest.json)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Push updated version
-        if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
+        if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' && steps.manifest-update.outputs == 'true' }}
         run: |
           git config user.name "dependabot[bot]"
           git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
