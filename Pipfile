@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+colorlog = "==6.7.0"
+homeassistant = "==2024.6.0"
+ruff = "==0.0.292"
+dacite = "==1.8.1"
+python-slugify = "==8.0.4"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
