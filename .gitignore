@@ -438,3 +438,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,python,windows,jetbrains,homeassistant,visualstudiocode,venv,dotenv
+
+# Home Assistant configuration
+ config/*
+ !config/configuration.yaml
