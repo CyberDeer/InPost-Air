@@ -495,10 +495,11 @@ wheels = [
 
 [[package]]
 name = "dacite"
-version = "1.8.1"
+version = "1.9.2"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/a0/7ca79796e799a3e782045d29bf052b5cde7439a2bbb17f15ff44f7aacc63/dacite-1.9.2.tar.gz", hash = "sha256:6ccc3b299727c7aa17582f0021f6ae14d5de47c7227932c47fec4cdfefd26f09", size = 22420 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/0f/cf0943f4f55f0fbc7c6bd60caf1343061dff818b02af5a0d444e473bb78d/dacite-1.8.1-py3-none-any.whl", hash = "sha256:cc31ad6fdea1f49962ea42db9421772afe01ac5442380d9a99fcf3d188c61afe", size = 14309 },
+    { url = "https://files.pythonhosted.org/packages/94/35/386550fd60316d1e37eccdda609b074113298f23cef5bddb2049823fe666/dacite-1.9.2-py3-none-any.whl", hash = "sha256:053f7c3f5128ca2e9aceb66892b1a3c8936d02c686e707bee96e19deef4bc4a0", size = 16600 },
 ]
 
 [[package]]
@@ -802,15 +803,14 @@ wheels = [
 
 [[package]]
 name = "inpost-air"
-version = "1.2.3"
+version = "1.5.0"
 source = { virtual = "." }
 dependencies = [
     { name = "dacite" },
-    { name = "josepy" },
     { name = "python-slugify" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "homeassistant" },
     { name = "ruff" },
@@ -818,16 +818,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dacite", specifier = "==1.8.1" },
-    { name = "josepy", specifier = "==1.15.0" },
+    { name = "dacite", specifier = "==1.9.2" },
+    { name = "homeassistant", marker = "extra == 'dev'", specifier = "==2024.6.0" },
     { name = "python-slugify", specifier = "==8.0.4" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.0.292" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "homeassistant", specifier = "==2024.6.0" },
-    { name = "ruff", specifier = "==0.0.292" },
-]
+provides-extras = ["dev"]
 
 [[package]]
 name = "jinja2"
