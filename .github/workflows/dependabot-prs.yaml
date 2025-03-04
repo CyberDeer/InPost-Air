@@ -35,4 +35,4 @@ jobs:
           git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
           git add ./custom_components/inpost_air/manifest.json
           git commit -m "chore(deps): update dependencies in manifest.json"
-          git push
+          git push -u origin HEAD:${{ github.event.pull_request.head.ref }}
