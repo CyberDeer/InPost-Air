@@ -13,6 +13,7 @@ from .const import Entities
 
 _LOGGER = logging.getLogger(__name__)
 
+# Dummy test
 
 @dataclass
 class ValueWithNorm:
