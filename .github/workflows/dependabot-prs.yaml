@@ -1,0 +1,38 @@
+name: Dependabot Update
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update-requirements:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Update dependencies in manifest.json
+        if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
+        run: |
+          REQUIREMENTS=$(yq -o json '.project.dependencies' pyproject.toml)
+          yq -i -o json ".requirements=${REQUIREMENTS}" ./custom_components/inpost_air/manifest.json
+
+      - name: Push updated version
+        if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
+        run: |
+          git config user.name "dependabot[bot]"
+          git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
+          git add ./custom_components/inpost_air/manifest.json
+          git commit -m "chore(deps): update dependencies in manifest.json"
+          git push

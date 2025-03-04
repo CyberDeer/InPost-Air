@@ -15,7 +15,10 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/CyberDeer/InPost-Air/issues",
-  "requirements": [],
+  "requirements": [
+    "dacite==1.8.1",
+    "python-slugify==8.0.4"
+  ],
   "ssdp": [],
   "version": "1.5.0",
   "zeroconf": []
