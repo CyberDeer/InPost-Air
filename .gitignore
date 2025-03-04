@@ -46,7 +46,7 @@ home-assistant.log.*
 ozw_log.txt
 
 # Development files
-custom_components
+# custom_components
 
 ### JetBrains ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
