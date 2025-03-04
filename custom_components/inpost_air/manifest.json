@@ -16,7 +16,7 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/CyberDeer/InPost-Air/issues",
   "requirements": [
-    "dacite==1.8.1",
+    "dacite==1.9.2",
     "python-slugify==8.0.4"
   ],
   "ssdp": [],
