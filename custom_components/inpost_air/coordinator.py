@@ -1,4 +1,5 @@
 """InPost API data coordinator."""
+
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta

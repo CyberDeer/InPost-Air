@@ -1,4 +1,5 @@
 """Functions to connect to InPost APIs."""
+
 import asyncio
 from dataclasses import dataclass
 import logging
