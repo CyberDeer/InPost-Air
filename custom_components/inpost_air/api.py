@@ -42,7 +42,7 @@ class InPostAirPoint:
     b: str
     h: str
     i: str
-    l: InPostAirPointCoordinates
+    l: InPostAirPointCoordinates  # noqa: E741
     p: int
     s: int
 
