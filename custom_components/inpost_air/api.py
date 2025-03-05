@@ -1,4 +1,5 @@
 """Functions to connect to InPost APIs."""
+
 import asyncio
 from dataclasses import dataclass
 import logging
@@ -42,7 +43,7 @@ class InPostAirPoint:
     b: str
     h: str
     i: str
-    l: InPostAirPointCoordinates
+    l: InPostAirPointCoordinates  # noqa: E741
     p: int
     s: int
 

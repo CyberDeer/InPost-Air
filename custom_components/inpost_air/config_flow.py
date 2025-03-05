@@ -1,4 +1,5 @@
 """Config flow for InPost Air integration."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 
