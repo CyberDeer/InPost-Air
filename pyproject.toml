@@ -6,4 +6,4 @@ requires-python = ">=3.12"
 dependencies = ["dacite==1.9.2", "python-slugify==8.0.4"]
 
 [project.optional-dependencies]
-dev = ["homeassistant==2024.6.0", "ruff==0.9.9"]
+dev = ["homeassistant==2024.6.0", "ruff==0.9.10"]
