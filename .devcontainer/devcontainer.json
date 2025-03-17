@@ -33,8 +33,14 @@
       "settings": {
         "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
         "python.testing.pytestArgs": [
-          "--no-cov"
+          "--color=yes",
+          "--cov-report",
+          "xml:coverage.xml",
+          "--cov=custom_components/inpost_air",
+          "tests"
         ],
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true,
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -49,7 +55,8 @@
         ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
-        }
+        },
+        "pylint.enabled": false
       }
     }
   },
