@@ -875,8 +875,8 @@ dev = [
     { name = "homeassistant" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-github-actions-annotate-failures" },
     { name = "pytest-homeassistant-custom-component" },
+    { name = "pytest-json-ctrf" },
     { name = "ruff" },
 ]
 
@@ -891,8 +891,8 @@ dev = [
     { name = "homeassistant", specifier = "==2024.6.0" },
     { name = "pytest", specifier = "==8.2.0" },
     { name = "pytest-cov", specifier = "==5.0.0" },
-    { name = "pytest-github-actions-annotate-failures", specifier = "==0.2.0" },
     { name = "pytest-homeassistant-custom-component", specifier = "==0.13.132" },
+    { name = "pytest-json-ctrf", specifier = "==0.3.5" },
     { name = "ruff", specifier = "==0.9.8" },
 ]
 
@@ -1455,6 +1455,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/15/70/95ce5d9bb80352fca078508ec213f716243ddaca564e3a43257e433b2a6f/pytest_homeassistant_custom_component-0.13.132.tar.gz", hash = "sha256:5ae63a84e391606fbf814c864025e1c38cf05628f0dd81df3d0cc3a689f86007", size = 50620 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/19/2810a8cd15d2a87047d6bb8c6c0b7d4bdb65852386f755dc7e809a7fab36/pytest_homeassistant_custom_component-0.13.132-py3-none-any.whl", hash = "sha256:3f158bf133810ec2fb1d05998ab3c5ef79476a7b0f4e9902f58a38f3f8e39709", size = 55170 },
+]
+
+[[package]]
+name = "pytest-json-ctrf"
+version = "0.3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/88/1d/7f149972644af2cd1f3e49b17e9584af3f9df41ce84b5bfc5250abb44643/pytest_json_ctrf-0.3.5.tar.gz", hash = "sha256:3efc3afc6dd1fb69f73031217b1dfa239154241aaca63db8a8995cf3779bd7ff", size = 6665 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/a8/d58637d10f70ae14a1ad18cb37f4aa32d5593510213d5f929892cb1c9c6d/pytest_json_ctrf-0.3.5-py3-none-any.whl", hash = "sha256:e82fd1d69be2f92385bc33540063e5ad7b17b36de67764c84f3ceb9815a895e9", size = 6837 },
 ]
 
 [[package]]

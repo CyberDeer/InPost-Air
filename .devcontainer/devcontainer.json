@@ -37,6 +37,7 @@
           "--cov-report",
           "xml:coverage.xml",
           "--cov=custom_components/inpost_air",
+          "--ctrf=report.json",
           "tests"
         ],
         "python.testing.unittestEnabled": false,
