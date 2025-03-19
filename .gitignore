@@ -442,3 +442,6 @@ $RECYCLE.BIN/
 # Home Assistant configuration
  config/*
  !config/configuration.yaml
+
+# CTRF report
+report.json
