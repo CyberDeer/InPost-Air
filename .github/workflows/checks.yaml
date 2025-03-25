@@ -32,3 +32,45 @@ jobs:
 
       - name: Check project formatting
         run: uv run ruff format --check
+
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev --locked
+
+      - name: Run tests
+        run: uv run pytest --cov-report "xml:coverage.xml" --cov=custom_components/inpost_air --ctrf=report.json tests/
+
+      - name: Pytest coverage comment
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        uses: MishaKav/pytest-coverage-comment@v1
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        with:
+          report-path: "report.json"
+          summary-report: false
+          pull-request: true
+          annotate: true
+          overwrite-comment: true
+          pull-request-report: true
+          suite-folded-report: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
