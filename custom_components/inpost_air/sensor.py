@@ -1,9 +1,6 @@
 """Sensor utilities and definitions."""
 
-from homeassistant.components.sensor.const import (
-    SensorDeviceClass,
-    SensorStateClass
-)
+from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
