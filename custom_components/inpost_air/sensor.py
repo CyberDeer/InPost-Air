@@ -1,8 +1,6 @@
 """Sensor utilities and definitions."""
 
-from homeassistant.components.sensor.const import (
-    SensorDeviceClass,
-)
+from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -28,6 +26,7 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.Temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda data: item.value
         if (item := data.get(Entities.Temperature))
@@ -36,6 +35,7 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.PM2_5,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         value_fn=lambda data: item.value
         if (item := data.get(Entities.PM2_5))
@@ -44,6 +44,7 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.PM2_5_Norm,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:percent",
         exists_fn=lambda data: item.value is not None
         if (item := data.get(Entities.PM10)) is not None
@@ -55,6 +56,7 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.Pressure,
         native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRESSURE,
         value_fn=lambda data: item.value
         if (item := data.get(Entities.Pressure))
@@ -63,6 +65,7 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.Humidity,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         value_fn=lambda data: item.value
         if (item := data.get(Entities.Humidity))
@@ -71,18 +74,21 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM1,
         value_fn=lambda data: item.value if (item := data.get(Entities.PM1)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         value_fn=lambda data: item.value if (item := data.get(Entities.PM10)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM10_Norm,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:percent",
         exists_fn=lambda data: item.value is not None
         if (item := data.get(Entities.PM10)) is not None
@@ -94,18 +100,21 @@ PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
         key=Entities.PM4,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:molecule",
         value_fn=lambda data: item.value if (item := data.get(Entities.PM4)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.NO2,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         value_fn=lambda data: item.value if (item := data.get(Entities.NO2)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.O3,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.OZONE,
         value_fn=lambda data: item.value if (item := data.get(Entities.O3)) else None,
     ),
