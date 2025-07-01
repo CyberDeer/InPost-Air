@@ -31,7 +31,7 @@ jobs:
           yq -i -o json ".requirements=$(yq -o json '.project.dependencies' pyproject.toml)" ./custom_components/inpost_air/manifest.json
 
       - name: Push updated version
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v6
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'pip' }}
         with:
           file_pattern: "./custom_components/inpost_air/manifest.json"
