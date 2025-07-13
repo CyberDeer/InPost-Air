@@ -3,7 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![downloads](https://img.shields.io/github/downloads/cyberdeer/inpost-air/total?label=Total%20downloads)](https://github.com/CyberDeer/InPost-Air)
 
-This component has been created to be used with Home Assistant.
+This component has been created to be used with Home Assistant. 
 
 ### Installation:
 
@@ -22,9 +22,10 @@ This component has been created to be used with Home Assistant.
 - Restart Home Assistant.
 - Go to Integrations and add the InPost Air integration
 
+
 ### Entities & Services
 
-**This integration will set up the following platforms.**
+This integration will set up the following entities based on the retrieved data.
 
 Platform | Entity | Description
 -- | -- | --
@@ -38,4 +39,14 @@ Platform | Entity | Description
 `sensor` | `parcel_locker_[YOUR_PARCEL_ID]_pm4` | PM4 concentration
 `sensor` | `parcel_locker_[YOUR_PARCEL_ID]_pressure` | Pressure
 `sensor` | `parcel_locker_[YOUR_PARCEL_ID]_temperature` | Temperature
+`sensor` | `parcel_locker_[YOUR_PARCEL_ID]_humidity` | Humidity
+
+These entities are calculated at runtime and not retrieved from the API.
+
+Platform | Entity | Description
+-- | -- | --
+`sensor` | `parcel_locker_[YOUR_PARCEL_ID]_eaqi` | [The European Air Quality Index](https://www.eea.europa.eu/themes/air/air-quality-index).
+`sensor` | `parcel_locker_[YOUR_PARCEL_ID]_paqi` | [The Polish Air Quality Index](https://powietrze.gios.gov.pl/pjp/content/health_informations) (pol. Indeks Jakości Powietrza).
+
+
 
