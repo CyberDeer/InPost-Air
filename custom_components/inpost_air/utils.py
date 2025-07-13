@@ -1,9 +1,10 @@
 from math import asin, cos, radians, sin, sqrt
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from slugify import slugify
 
-from custom_components.inpost_air.api import ParcelLocker
 from custom_components.inpost_air.const import DOMAIN
+from custom_components.inpost_air.models import InPostAirPoint, ParcelLocker
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -44,6 +45,15 @@ def get_device_info(parcel_locker: ParcelLocker) -> DeviceInfo:
             (DOMAIN, parcel_locker.locker_code),
             (DOMAIN, parcel_locker.locker_id),
         },
-        name=f"Parcel locker {parcel_locker.locker_code}",
-        manufacturer="InPost",
     )
+
+
+def get_parcel_locker_url(point: InPostAirPoint) -> str:
+    """
+    Generates a URL for a parcel locker based on the provided InPostAirPoint.
+    """
+    pathname = slugify(
+        f"paczkomat-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
+        lowercase=True,
+    )
+    return f"https://greencity.pl/{pathname}"

@@ -9,7 +9,8 @@ import re
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import InPostApi, ParcelLocker
+from .models import ParcelLocker
+from .api import InPostApi
 from .const import Entities
 
 _LOGGER = logging.getLogger(__name__)
