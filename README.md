@@ -46,7 +46,7 @@ These entities are calculated at runtime and not retrieved from the API.
 Platform | Entity | Description
 -- | -- | --
 `sensor` | `parcel_locker_[YOUR_PARCEL_ID]_eaqi` | [The European Air Quality Index](https://www.eea.europa.eu/themes/air/air-quality-index).
-`sensor` | `parcel_locker_[YOUR_PARCEL_ID]_paqi` | [The Polish Air Quality Index](https://powietrze.gios.gov.pl/pjp/content/health_informations) (pol. Indeks Jakości Powietrza).
+`sensor` | `parcel_locker_[YOUR_PARCEL_ID]_paqi` | [The Polish Air Quality Index](https://powietrze.gios.gov.pl/pjp/content/health_informations) (Pol. Indeks Jakości Powietrza).
 
 
 
