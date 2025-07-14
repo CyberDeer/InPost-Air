@@ -1,10 +1,15 @@
 """Utils tests."""
 
 from unittest.mock import Mock
-from custom_components.inpost_air.api import ParcelLocker
+from custom_components.inpost_air.models import (
+    InPostAirPoint,
+    InPostAirPointCoordinates,
+    ParcelLocker,
+)
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.utils import can_be_float, get_device_info, haversine
 from homeassistant.helpers.device_registry import DeviceInfo
+from custom_components.inpost_air.utils import get_parcel_locker_url
 
 
 def test_haversine():
@@ -70,9 +75,48 @@ def test_get_device_info():
             (DOMAIN, "ABC123"),
             (DOMAIN, "123456"),
         },
-        name="Parcel locker ABC123",
-        manufacturer="InPost",
     )
 
     # Test case: Check if the returned DeviceInfo matches the expected DeviceInfo
     assert get_device_info(mock_parcel_locker) == expected_device_info
+
+
+def test_get_parcel_locker_url():
+    """Test get_parcel_locker_url function."""
+
+    # Create a mock InPostAirPoint object
+    mock_point = Mock(spec=InPostAirPoint)
+    mock_point.n = "KUKU01BAPP"
+    mock_point.t = 1
+    mock_point.d = "Kuków U Żurka"
+    mock_point.m = ""
+    mock_point.q = ""
+    mock_point.f = "006"
+    mock_point.c = "Kuków"
+    mock_point.g = "kukow"
+    mock_point.e = "Kuków"
+    mock_point.r = "małopolskie"
+    mock_point.o = "34-206"
+    mock_point.b = "80"
+    mock_point.h = "24/7"
+    mock_point.i = "[]"
+    mock_point.l = Mock(spec=InPostAirPointCoordinates)
+    mock_point.l.a = 49.74508
+    mock_point.l.o = 19.46535
+    mock_point.p = 0
+    mock_point.s = 1
+
+    expected_path = "paczkomat-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
+    expected_url = f"https://greencity.pl/{expected_path}"
+
+    # Test case: Check if the generated URL matches the expected URL
+    assert get_parcel_locker_url(mock_point) == expected_url
+
+    # Test case: Check slugify handles special characters and lowercase
+    mock_point.g = "GĄ"
+    mock_point.n = "NĘ"
+    mock_point.e = "EŁ"
+    mock_point.r = "RÓ"
+    expected_path_special = "paczkomat-ga-ne-el-paczkomaty-ro"
+    expected_url_special = f"https://greencity.pl/{expected_path_special}"
+    assert get_parcel_locker_url(mock_point) == expected_url_special

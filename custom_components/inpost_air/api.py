@@ -8,44 +8,10 @@ from aiohttp import ClientResponse
 from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from slugify import slugify
+from custom_components.inpost_air.models import InPostAirPoint
+from custom_components.inpost_air.utils import get_parcel_locker_url
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class InPostAirPointCoordinates:
-    """
-    Represents the coordinates of an InPost Air point.
-
-    Attributes:
-        a (float): The latitude coordinate.
-        o (float): The longitude coordinate.
-    """
-
-    a: float
-    o: float
-
-
-@dataclass
-class InPostAirPoint:
-    n: str
-    t: int
-    d: str
-    m: str
-    q: str
-    f: str
-    c: str
-    g: str
-    e: str
-    r: str
-    o: str
-    b: str
-    h: str
-    i: str
-    l: InPostAirPointCoordinates  # noqa: E741
-    p: int
-    s: int
 
 
 @dataclass
@@ -61,15 +27,6 @@ class ParcelLockerAirDataResponse:
     message: str
     air_index_level: str
     air_sensors: list[str]
-
-
-class ParcelLocker:
-    """ParcelLocker class."""
-
-    def __init__(self, locker_code: str, locker_id: str) -> None:
-        """Init class."""
-        self.locker_code = locker_code
-        self.locker_id = locker_id
 
 
 class InPostApi:
@@ -136,13 +93,9 @@ class InPostApi:
 
     async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
         """Find parcel locker ID by its code."""
-        pathname = slugify(
-            f"paczkomat-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
-            lowercase=True,
-        )
         response = await self._request(
             method="get",
-            url=f"https://greencity.pl/{pathname}",
+            url=get_parcel_locker_url(point),
         )
         match = re.search(
             r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",

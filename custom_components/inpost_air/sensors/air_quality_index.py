@@ -8,7 +8,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util import dt as dt_util
 
 from custom_components.inpost_air import utils
-from custom_components.inpost_air.api import ParcelLocker
+from custom_components.inpost_air.models import ParcelLocker
 from custom_components.inpost_air.const import Entities
 
 

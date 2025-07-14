@@ -3,10 +3,10 @@
 from unittest import mock
 from unittest.mock import patch
 from custom_components.inpost_air import config_flow
-from custom_components.inpost_air.api import (
+from custom_components.inpost_air.api import InPostApi
+from custom_components.inpost_air.models import (
     InPostAirPoint,
     InPostAirPointCoordinates,
-    InPostApi,
 )
 
 mocked_lockers_list: list[InPostAirPoint] = [

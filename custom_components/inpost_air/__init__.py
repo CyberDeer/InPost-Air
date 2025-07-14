@@ -8,10 +8,13 @@ from dacite import from_dict
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
+from custom_components.inpost_air.models import ParcelLocker
+from custom_components.inpost_air.utils import get_device_info, get_parcel_locker_url
 
-from .api import InPostAirPoint, InPostApi, ParcelLocker
+from .api import InPostAirPoint, InPostApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +55,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     coordinator = InPostAirDataCoordinator(hass, api_client, parcel_locker)
 
     entry.runtime_data = InPostAirData(parcel_locker, coordinator)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers=get_device_info(parcel_locker).get("identifiers"),
+        name=f"Parcel locker {parcel_locker.locker_code}",
+        manufacturer="InPost",
+        configuration_url=get_parcel_locker_url(point),
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
