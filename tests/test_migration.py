@@ -149,7 +149,6 @@ async def test_migrate_entry_device_has_entities_warning(
     )
     mock_device_registry.async_update_device.assert_not_called()
     mock_device_registry.async_remove_device.assert_not_called()
-    mock_device_registry.async_remove_device.assert_not_called()
 
 
 async def test_migrate_entry_remove_orphaned_device(

@@ -31,12 +31,12 @@ class InPostAirData:
     coordinator: InPostAirDataCoordinator
 
 
-type InPostAirConfiEntry = ConfigEntry[InPostAirData]
+type InPostAirConfigEntry = ConfigEntry[InPostAirData]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
     """Set up InPost Air from a config entry."""
     api_client = InPostApi(hass)
     entry_data = entry.data.get("parcel_locker")
@@ -73,13 +73,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
     """Remove legacy 3-tuple devices left by ≤ 1.4.x."""
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1:  # 1.5.0 → 1.5.1
         dev_reg = dr.async_get(hass)
         ent_reg = er.async_get(hass)
