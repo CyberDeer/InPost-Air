@@ -107,7 +107,7 @@ def test_get_parcel_locker_url():
     mock_point.s = 1
 
     expected_path = "paczkomat-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
-    expected_url = f"https://greencity.pl/{expected_path}"
+    expected_url = f"https://inpost.pl/{expected_path}"
 
     # Test case: Check if the generated URL matches the expected URL
     assert get_parcel_locker_url(mock_point) == expected_url
@@ -118,5 +118,5 @@ def test_get_parcel_locker_url():
     mock_point.e = "EŁ"
     mock_point.r = "RÓ"
     expected_path_special = "paczkomat-ga-ne-el-paczkomaty-ro"
-    expected_url_special = f"https://greencity.pl/{expected_path_special}"
+    expected_url_special = f"https://inpost.pl/{expected_path_special}"
     assert get_parcel_locker_url(mock_point) == expected_url_special
