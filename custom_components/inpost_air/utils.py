@@ -56,4 +56,4 @@ def get_parcel_locker_url(point: InPostAirPoint) -> str:
         f"paczkomat-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
         lowercase=True,
     )
-    return f"https://greencity.pl/{pathname}"
+    return f"https://inpost.pl/{pathname}"

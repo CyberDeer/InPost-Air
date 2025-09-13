@@ -69,7 +69,7 @@ class InPostApi:
             return None
 
         response = await self._request(
-            method="get", url="https://greencity.pl/sites/default/files/points.json"
+            method="get", url="https://inpost.pl/sites/default/files/points.json"
         )
         parcel_locker = next(
             (
@@ -85,7 +85,7 @@ class InPostApi:
     async def get_parcel_lockers_list(self) -> list[InPostAirPoint]:
         """Get parcel lockers list."""
         response = await self._request(
-            method="get", url="https://greencity.pl/sites/default/files/points.json"
+            method="get", url="https://inpost.pl/sites/default/files/points.json"
         )
         response_data = from_dict(ParcelLockerListResponse, await response.json())
 
@@ -110,7 +110,7 @@ class InPostApi:
         """Get air data from parcel locker."""
         response = await self._request(
             method="post",
-            url=f"https://greencity.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
+            url=f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
             headers={"X-Requested-With": "XMLHttpRequest"},
         )
 
