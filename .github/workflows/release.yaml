@@ -24,7 +24,7 @@ jobs:
 
             - name: Semantic Release
               id: semantic-release
-              uses: cycjimmy/semantic-release-action@v4
+              uses: cycjimmy/semantic-release-action@v5
               with:
                   semantic_version: 24.2.3
                   extra_plugins: |
