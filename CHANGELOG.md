@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/CyberDeer/InPost-Air/compare/v1.5.0...v1.6.0) (2025-09-13)
+
+
+### Bug Fixes
+
+* greencity.pl deprecated, switch to inpost.pl ([#68](https://github.com/CyberDeer/InPost-Air/issues/68)) ([46f44ef](https://github.com/CyberDeer/InPost-Air/commit/46f44ef5cff7ca5bd8b6ff75561b0b4f56f8a69e))
+
+
+### Features
+
+* add `configuration_url` for each device ([#51](https://github.com/CyberDeer/InPost-Air/issues/51)) ([6c8931e](https://github.com/CyberDeer/InPost-Air/commit/6c8931ec23abe825fc2b3e508aaedee60dee64ee)), closes [#50](https://github.com/CyberDeer/InPost-Air/issues/50)
+* added SensorStateClass.MEASUREMENT to applicable entities ([#43](https://github.com/CyberDeer/InPost-Air/issues/43)) ([8166695](https://github.com/CyberDeer/InPost-Air/commit/816669599df59bba0dc891a5e9d2c5a0fa740e5f))
+
 # [1.5.0](https://github.com/CyberDeer/InPost-Air/compare/v1.4.0...v1.5.0) (2025-03-03)
 
 
