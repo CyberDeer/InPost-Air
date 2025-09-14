@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/CyberDeer/InPost-Air/compare/v1.6.0...v1.6.1) (2025-09-14)
+
+
+### Bug Fixes
+
+* data serialization from inpost ([#70](https://github.com/CyberDeer/InPost-Air/issues/70)) ([dc93094](https://github.com/CyberDeer/InPost-Air/commit/dc9309438521aa5f7ab63157b809a609f8550347))
+
 # [1.6.0](https://github.com/CyberDeer/InPost-Air/compare/v1.5.0...v1.6.0) (2025-09-13)
 
 
