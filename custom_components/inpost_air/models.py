@@ -30,7 +30,7 @@ class InPostAirPoint:
     t: int
     d: str
     m: str
-    q: str
+    q: int | str
     f: str
     c: str
     g: str
