@@ -57,7 +57,8 @@
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
         },
-        "pylint.enabled": false
+        "pylint.enabled": false,
+        "python-envs.pythonProjects": []
       }
     }
   },
