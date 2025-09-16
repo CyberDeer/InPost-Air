@@ -7,36 +7,30 @@ from custom_components.inpost_air.models import (
 )
 
 
-@pytest.mark.parametrize("expected_lingering_timers", [True])
-@pytest.mark.api
-async def test_parcel_lockers_list(hass):
+@pytest.fixture()
+def _allow_inpost_requests():
     pytest_socket.enable_socket()
     pytest_socket.socket_allow_hosts(["inpost.pl"])
 
-    api = InPostApi(hass)
-    response = await api.get_parcel_lockers_list()
+
+@pytest.mark.parametrize("expected_lingering_timers", [True])
+@pytest.mark.api
+async def test_parcel_lockers_list(hass, _allow_inpost_requests):
+    response = await InPostApi(hass).get_parcel_lockers_list()
     assert response is not None
 
 
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
-async def test_parcel_locker_search(hass):
-    pytest_socket.enable_socket()
-    pytest_socket.socket_allow_hosts(["inpost.pl"])
-
-    api = InPostApi(hass)
-    response = await api.search_parcel_locker("AJE01BAPP")
+async def test_parcel_locker_search(hass, _allow_inpost_requests):
+    response = await InPostApi(hass).search_parcel_locker("AJE01BAPP")
     assert response is not None
 
 
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
-async def test_find_parcel_locker_id(hass):
-    pytest_socket.enable_socket()
-    pytest_socket.socket_allow_hosts(["inpost.pl"])
-
-    api = InPostApi(hass)
-    response = await api.find_parcel_locker_id(
+async def test_find_parcel_locker_id(hass, _allow_inpost_requests):
+    response = await InPostApi(hass).find_parcel_locker_id(
         InPostAirPoint(
             "AJE01BAPP",
             1,
@@ -62,10 +56,6 @@ async def test_find_parcel_locker_id(hass):
 
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
-async def test_air_data(hass):
-    pytest_socket.enable_socket()
-    pytest_socket.socket_allow_hosts(["inpost.pl"])
-
-    api = InPostApi(hass)
-    response = await api.get_parcel_locker_air_data("AJE01BAPP", "56311")
+async def test_air_data(hass, _allow_inpost_requests):
+    response = await InPostApi(hass).get_parcel_locker_air_data("AJE01BAPP", "56311")
     assert response is not None
