@@ -1,5 +1,6 @@
 import pytest
 import pytest_socket
+import os
 from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.models import (
     InPostAirPoint,
@@ -27,6 +28,9 @@ async def test_parcel_locker_search(hass, _allow_inpost_requests):
     assert response is not None
 
 
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true", reason="InPost blocks Github IP address"
+)
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
 async def test_find_parcel_locker_id(hass, _allow_inpost_requests):
@@ -54,6 +58,9 @@ async def test_find_parcel_locker_id(hass, _allow_inpost_requests):
     assert response is not None
 
 
+@pytest.mark.skipif(
+    os.environ.get("CI") == "true", reason="InPost blocks Github IP address"
+)
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
 async def test_air_data(hass, _allow_inpost_requests):
