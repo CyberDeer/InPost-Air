@@ -17,6 +17,7 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = ["api"]
 
 [tool.uv]
 # old version of uv is somehow transitive dependency of pytest-homeassistant-custom-component
