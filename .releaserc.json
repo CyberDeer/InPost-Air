@@ -10,7 +10,13 @@
         [
             "@semantic-release/exec",
             {
-                "prepareCmd": "yq -i -o json '.version=\"${nextRelease.version}\"' ./custom_components/inpost_air/manifest.json && sed -i 's/version = \".*\"/version = \"${nextRelease.version}\"/' ./pyproject.toml"
+                "prepareCmd": "uv version ${nextRelease.version}"
+            }
+        ],
+        [
+            "@ceski23/semantic-release-hacs",
+            {
+                "manifestPath": "custom_components/inpost_air/manifest.json"
             }
         ],
         [
@@ -20,7 +26,8 @@
                 "assets": [
                     "CHANGELOG.md",
                     "custom_components/inpost_air/manifest.json",
-                    "pyproject.toml"
+                    "pyproject.toml",
+                    "uv.lock"
                 ]
             }
         ],
@@ -29,7 +36,7 @@
             {
                 "assets": [
                     {
-                        "path": "custom_components/inpost_air/release.zip",
+                        "path": "release.zip",
                         "label": "Release archive"
                     }
                 ]
