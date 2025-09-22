@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "devcontainers"
-    directory: "/"
+    directory: "/.devcontainer"
     schedule:
       interval: "daily"
 
@@ -21,6 +21,6 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "docker"
-    directory: ".devcontainer"
+    directory: "/.devcontainer"
     schedule:
       interval: "daily"
