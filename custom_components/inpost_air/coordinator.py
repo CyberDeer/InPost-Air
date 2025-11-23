@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .models import ParcelLocker
-from .api import InPostApi
+from .api import InPostAirApiClientError, InPostApi
 from .const import Entities
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,5 +90,7 @@ class InPostAirDataCoordinator(DataUpdateCoordinator):
                 return {
                     x.name: x for line in data.air_sensors if (x := create_value(line))
                 }
+        except InPostAirApiClientError as err:
+            raise UpdateFailed(err) from err
         except Exception as err:
             raise UpdateFailed("Error communicating with API") from err

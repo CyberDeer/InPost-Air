@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 import re
-from aiohttp import ClientResponse
+from aiohttp import ClientResponse, ClientResponseError
 from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -42,6 +42,7 @@ class InPostApi:
         method: str,
         url: str,
         headers: dict | None = None,
+        raise_client_response_error: bool = False,
     ) -> ClientResponse:
         """Get information from the API."""
         try:
@@ -58,6 +59,10 @@ class InPostApi:
         except TimeoutError as e:
             _LOGGER.warning("Request timed out")
             raise InPostAirApiClientError("Request timed out") from e
+        except ClientResponseError as e:
+            if raise_client_response_error:
+                raise
+            raise InPostAirApiClientError("Something really wrong happened!") from e
         except Exception as exception:  # pylint: disable=broad-except
             raise InPostAirApiClientError(
                 "Something really wrong happened!"
@@ -108,14 +113,28 @@ class InPostApi:
         self, locker_code: str, locker_id: str
     ) -> ParcelLockerAirDataResponse:
         """Get air data from parcel locker."""
-        response = await self._request(
-            method="post",
-            url=f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
-            headers={"X-Requested-With": "XMLHttpRequest"},
-        )
+        try:
+            response = await self._request(
+                method="post",
+                url=f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
+                headers={"X-Requested-With": "XMLHttpRequest"},
+                raise_client_response_error=True,
+            )
+        except ClientResponseError as e:
+            if e.status == 404:
+                raise InPostAirApiClientSensorsMissingError(
+                    "Air sensors are not available"
+                ) from e
+            raise InPostAirApiClientError("Something really wrong happened!") from e
+        except:
+            raise
 
         return from_dict(ParcelLockerAirDataResponse, await response.json())
 
 
 class InPostAirApiClientError(Exception):
     """Exception to indicate a general API error."""
+
+
+class InPostAirApiClientSensorsMissingError(InPostAirApiClientError):
+    """Exception to indicate missing air sensors error"""

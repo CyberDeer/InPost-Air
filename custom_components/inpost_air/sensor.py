@@ -130,8 +130,6 @@ async def async_setup_entry(
     parcel_locker = entry.runtime_data.parcel_locker
     coordinator = entry.runtime_data.coordinator
 
-    await coordinator.async_config_entry_first_refresh()
-
     base_sensors = [
         ParcelLockerSensor(coordinator, parcel_locker, description)
         for description in PARCEL_LOCKER_SENSORS

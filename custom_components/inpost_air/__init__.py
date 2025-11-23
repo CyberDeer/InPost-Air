@@ -8,6 +8,7 @@ from dacite import from_dict
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
@@ -55,6 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     coordinator = InPostAirDataCoordinator(hass, api_client, parcel_locker)
 
     entry.runtime_data = InPostAirData(parcel_locker, coordinator)
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as ex:
+        if "Air sensors are not available" in str(ex):
+            raise ConfigEntryError(ex)
+        raise ex
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
