@@ -1,3 +1,13 @@
+## [1.6.2](https://github.com/CyberDeer/InPost-Air/compare/v1.6.1...v1.6.2) (2025-11-23)
+
+
+### Bug Fixes
+
+* Add setup to Trivy workflow ([9416961](https://github.com/CyberDeer/InPost-Air/commit/94169613b9e35437996d0a3f127dc43b185cfe4d))
+* Change Dependabot directory for devcontainers ([17213e2](https://github.com/CyberDeer/InPost-Air/commit/17213e2c578b99aca68d33fae86e8c72f1961cf2))
+* improve missing air quality data handling and entry setup ([#92](https://github.com/CyberDeer/InPost-Air/issues/92)) ([ad25568](https://github.com/CyberDeer/InPost-Air/commit/ad25568d88218c340cc08362580cf88f0383c644)), closes [#90](https://github.com/CyberDeer/InPost-Air/issues/90)
+* Update dependabot configuration directories ([e08b9eb](https://github.com/CyberDeer/InPost-Air/commit/e08b9ebfd54117eb08fd1bcd9f21a4d4dc079ebc))
+
 ## [1.6.1](https://github.com/CyberDeer/InPost-Air/compare/v1.6.0...v1.6.1) (2025-09-14)
 
 
