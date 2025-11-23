@@ -47,7 +47,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> InPostAir
         raise UnknownParcelLocker
 
     try:
-        await api_client.find_parcel_locker_id(parcel_locker)
+        parcel_locker_id = await api_client.find_parcel_locker_id(parcel_locker)
+        await api_client.get_parcel_locker_air_data(parcel_locker.n, parcel_locker_id)
     except Exception as exc:
         raise ParcelLockerWithoutAirData from exc
 
