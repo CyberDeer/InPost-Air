@@ -68,13 +68,16 @@ class InPostApi:
                 "Something really wrong happened!"
             ) from exception
 
-    async def _search_easypack24_locker(self, locker_code: str) -> InPostAirPoint | None:
+    async def _search_easypack24_locker(
+        self, locker_code: str
+    ) -> InPostAirPoint | None:
         """Find info about given parcel locker."""
         if not locker_code or locker_code == "":
             return None
 
         response = await self._request(
-            method="get", url="https://api-shipx-pl.easypack24.net/v1/points/" + locker_code
+            method="get",
+            url="https://api-shipx-pl.easypack24.net/v1/points/" + locker_code,
         )
         resp = await response.json()
 
@@ -101,13 +104,12 @@ class InPostApi:
             "o": resp_address.get("post_code") or "",
             "b": resp_address.get("building_number") or "",
             "h": resp.get("opening_hours") or "",
-            "i": "[]", # Unknown
+            "i": "[]",  # Unknown
             "l": {"a": location["latitude"], "o": location["longitude"]},
-            "p": 1 if resp.get("payment_type", {"0": ""}) == "0" else 0 ,
-            "s": 1, # Unkown - most lockers have 1 here
+            "p": 1 if resp.get("payment_type", {"0": ""}) == "0" else 0,
+            "s": 1,  # Unkown - most lockers have 1 here
         }
         return parcel_locker
-
 
     async def search_parcel_locker(self, locker_code: str) -> InPostAirPoint | None:
         """Find info about given parcel locker."""
