@@ -68,6 +68,49 @@ class InPostApi:
                 "Something really wrong happened!"
             ) from exception
 
+    async def _search_easypack24_locker(
+        self, locker_code: str
+    ) -> InPostAirPoint | None:
+        """Find info about given parcel locker."""
+        if not locker_code or locker_code == "":
+            return None
+
+        response = await self._request(
+            method="get",
+            url="https://api-shipx-pl.easypack24.net/v1/points/" + locker_code,
+        )
+        resp = await response.json()
+
+        error = resp.get("error")
+        if error:
+            _LOGGER.warning(f"easypack24.net for {locker_code} returned error: {resp}")
+            return None
+
+        resp_address = resp.get("address_details", {})
+        location = resp.get("location", {"latitude": "0", "longitude": "0"})
+        city = resp_address.get("city") or ""
+
+        parcel_locker = {
+            "n": resp["name"],
+            "t": 1,
+            "d": resp["location_description"],
+            "m": resp.get("apm_doubled") or "",
+            "q": resp.get("partner_id") or "",
+            "f": resp.get("physical_type_mapped") or "",
+            "c": city,
+            "g": city.lower(),
+            "e": resp_address.get("street") or "",
+            "r": resp_address.get("province") or "",
+            "o": resp_address.get("post_code") or "",
+            "b": resp_address.get("building_number") or "",
+            "h": resp.get("opening_hours") or "",
+            "i": "[]",  # Unknown
+            "l": {"a": location["latitude"], "o": location["longitude"]},
+            "p": 1 if resp.get("payment_type", {"0": ""}) == "0" else 0,
+            "s": 1,  # Unkown - most lockers have 1 here
+        }
+        return parcel_locker
+
     async def search_parcel_locker(self, locker_code: str) -> InPostAirPoint | None:
         """Find info about given parcel locker."""
         if not locker_code or locker_code == "":
@@ -84,6 +127,9 @@ class InPostApi:
             ),
             None,
         )
+
+        if not parcel_locker:
+            parcel_locker = await self._search_easypack24_locker(locker_code)
 
         return from_dict(InPostAirPoint, parcel_locker) if parcel_locker else None
 
