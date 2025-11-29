@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/CyberDeer/InPost-Air/compare/v1.6.2...v1.7.0) (2025-11-29)
+
+
+### Features
+
+* allow to add parcel which is not available on default endpoint ([#95](https://github.com/CyberDeer/InPost-Air/issues/95)) ([0720bb4](https://github.com/CyberDeer/InPost-Air/commit/0720bb47da37fd7944c5c5ed1d35b12ea2d65196))
+
 ## [1.6.2](https://github.com/CyberDeer/InPost-Air/compare/v1.6.1...v1.6.2) (2025-11-23)
 
 

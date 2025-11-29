@@ -867,7 +867,7 @@ wheels = [
 
 [[package]]
 name = "inpost-air"
-version = "1.6.2"
+version = "1.7.0"
 source = { virtual = "." }
 dependencies = [
     { name = "dacite" },
