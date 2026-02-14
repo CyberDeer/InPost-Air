@@ -10,10 +10,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
 from custom_components.inpost_air.models import ParcelLocker
 from custom_components.inpost_air.utils import get_device_info, get_parcel_locker_url
+from custom_components.inpost_air.const import DOMAIN
 
 from .api import InPostAirPoint, InPostApi
 
@@ -30,12 +32,12 @@ class InPostAirData:
     coordinator: InPostAirDataCoordinator
 
 
-type InPostAirConfiEntry = ConfigEntry[InPostAirData]
+type InPostAirConfigEntry = ConfigEntry[InPostAirData]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
     """Set up InPost Air from a config entry."""
     api_client = InPostApi(hass)
     entry_data = entry.data.get("parcel_locker")
@@ -79,30 +81,75 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: InPostAirConfiEntry):
-    """Migrate old entry."""
-    _LOGGER.debug(
-        "Migrating %s from version %s", config_entry.title, config_entry.version
-    )
+async def async_migrate_entry(hass: HomeAssistant, entry: InPostAirConfigEntry) -> bool:
+    """Remove legacy 3-tuple devices left by ≤ 1.4.x."""
 
-    if config_entry.version > 2:
+    if entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={"parcel_locker": from_dict(InPostAirPoint, config_entry.data)},
-            version=2,
-        )
+    if entry.version == 1:  # 1.5.0 → 1.5.1
+        dev_reg = dr.async_get(hass)
+        ent_reg = er.async_get(hass)
 
-    _LOGGER.debug(
-        "Migrating %s to version %s completed", config_entry.title, config_entry.version
-    )
+        for device in list(dev_reg.devices.values()):
+            if entry.entry_id not in device.config_entries:
+                continue
 
+            # Detect an old device with a single 3-element identifier
+            old_id = next(
+                (i for i in device.identifiers if len(i) == 3 and i[0] == DOMAIN),
+                None,
+            )
+            if not old_id:
+                continue
+
+            # Skip if it still has entities (unexpected edge-case)
+            device_entities = er.async_entries_for_device(
+                registry=ent_reg, device_id=device.id
+            )
+            if device_entities:
+                _LOGGER.warning(
+                    "Legacy device %s still has entities; skipping cleanup", device.id
+                )
+                continue
+
+            # Optionally carry over area/name/disabled flags to the new device
+            _, code, _ = old_id
+            new_dev = next(
+                (
+                    d
+                    for d in dev_reg.devices.values()
+                    if (DOMAIN, code) in d.identifiers
+                    and entry.entry_id in d.config_entries
+                    and d.id != device.id
+                ),
+                None,
+            )
+            if new_dev:
+                # Convert string disabled_by to enum if needed
+                old_disabled_by = device.disabled_by
+                if isinstance(old_disabled_by, str):
+                    old_disabled_by = dr.DeviceEntryDisabler(old_disabled_by)
+
+                new_disabled_by = new_dev.disabled_by
+                if isinstance(new_disabled_by, str):
+                    new_disabled_by = dr.DeviceEntryDisabler(new_disabled_by)
+
+                dev_reg.async_update_device(
+                    new_dev.id,
+                    area_id=device.area_id or new_dev.area_id,
+                    name_by_user=device.name_by_user or new_dev.name_by_user,
+                    disabled_by=old_disabled_by or new_disabled_by,
+                )
+
+            # Remove the orphaned 3-tuple device
+            dev_reg.async_remove_device(device.id)
+
+        entry.version = 2  # mark migration complete
     return True
