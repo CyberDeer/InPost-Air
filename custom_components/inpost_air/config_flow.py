@@ -1,7 +1,7 @@
 """Config flow for InPost Air integration."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 import logging
 from typing import Any
@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -56,10 +56,30 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> InPostAir
 
 
 class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for InPost Air."""
+    """Create the single InPost Air entry."""
 
-    VERSION = 2
+    VERSION = 3
     MINOR_VERSION = 1
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry):
+        """Allow adding parcel lockers to the integration."""
+        return {"parcel_locker": ParcelLockerSubentryFlow}
+
+    async def async_step_user(self, user_input=None):
+        """Create the integration; parcel lockers are added as subentries."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title="InPost Air", data={})
+
+
+class ParcelLockerSubentryFlow(config_entries.ConfigSubentryFlow):
+    """Add a parcel locker to the integration."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -70,8 +90,11 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 parcel_locker = await validate_input(self.hass, user_input)
 
-                await self.async_set_unique_id(parcel_locker.n)
-                self._abort_if_unique_id_configured()
+                if any(
+                    subentry.unique_id == parcel_locker.n
+                    for subentry in self._get_entry().subentries.values()
+                ):
+                    return self.async_abort(reason="already_configured")
             except UnknownParcelLocker:
                 errors["base"] = "unknown_parcel_locker"
             except ParcelLockerWithoutAirData:
@@ -79,7 +102,8 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=f"Parcel locker {parcel_locker.n}",
-                    data={"parcel_locker": parcel_locker},
+                    data={"parcel_locker": asdict(parcel_locker)},
+                    unique_id=parcel_locker.n,
                 )
 
         parcel_lockers = [

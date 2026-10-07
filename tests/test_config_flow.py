@@ -1,9 +1,7 @@
 """Define tests for config flow"""
 
-from unittest import mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from custom_components.inpost_air import config_flow
-from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.models import (
     InPostAirPoint,
     InPostAirPointCoordinates,
@@ -33,22 +31,20 @@ mocked_lockers_list: list[InPostAirPoint] = [
 
 
 async def test_flow_init(hass):
-    """Test the initial flow."""
-    with patch.object(InPostApi, "get_parcel_lockers_list") as get_parcel_lockers_list:
-        get_parcel_lockers_list.return_value = mocked_lockers_list
-
+    """Test that initial setup creates the parent without a confirmation form."""
+    with patch(
+        "custom_components.inpost_air.async_setup_entry",
+        new=AsyncMock(return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}
         )
 
-    assert {
-        "data_schema": mock.ANY,
-        "description_placeholders": None,
-        "errors": {},
-        "flow_id": mock.ANY,
-        "handler": "inpost_air",
-        "step_id": "user",
-        "type": "form",
-        "last_step": None,
-        "preview": None,
-    } == result
+    assert result["type"] == "create_entry"
+    assert result["title"] == "InPost Air"
+    assert result["data"] == {}
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+    assert result["reason"] == "single_instance_allowed"

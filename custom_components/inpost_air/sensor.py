@@ -127,20 +127,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups sensors from config entry."""
-    parcel_locker = entry.runtime_data.parcel_locker
-    coordinator = entry.runtime_data.coordinator
-
-    base_sensors = [
-        ParcelLockerSensor(coordinator, parcel_locker, description)
-        for description in PARCEL_LOCKER_SENSORS
-        if description.exists_fn(coordinator.data)
-    ]
-
-    async_add_entities(
-        [
-            *base_sensors,
-            PolishAirQualityIndexSensor(parcel_locker),
-            EuropeanAirQualityIndexSensor(parcel_locker),
-        ],
-        update_before_add=True,
-    )
+    for subentry_id, runtime_data in entry.runtime_data.items():
+        parcel_locker = runtime_data.parcel_locker
+        coordinator = runtime_data.coordinator
+        base_sensors = [
+            ParcelLockerSensor(coordinator, parcel_locker, description)
+            for description in PARCEL_LOCKER_SENSORS
+            if description.exists_fn(coordinator.data)
+        ]
+        async_add_entities(
+            [
+                *base_sensors,
+                PolishAirQualityIndexSensor(parcel_locker),
+                EuropeanAirQualityIndexSensor(parcel_locker),
+            ],
+            update_before_add=True,
+            config_subentry_id=subentry_id,
+        )

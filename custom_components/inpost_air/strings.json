@@ -2,17 +2,30 @@
 	"config": {
 		"step": {
 			"user": {
-				"data": {
-					"parcelLockerId": "Parcel Locker ID"
-				}
+				"description": "Set up InPost Air, then add parcel lockers."
 			}
 		},
-		"error": {
-			"unknown_parcel_locker": "Couldn't find parcel locker with this ID",
-			"parcel_locker_no_data": "This parcel locker doesn't have air quality data"
-		},
 		"abort": {
-			"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+			"single_instance_allowed": "InPost Air is already configured."
+		}
+	},
+	"config_subentries": {
+		"parcel_locker": {
+			"step": {
+				"user": {
+					"data": {
+						"parcelLockerId": "Parcel Locker ID"
+					}
+				}
+			},
+			"error": {
+				"unknown_parcel_locker": "Couldn't find parcel locker with this ID",
+				"parcel_locker_no_data": "This parcel locker doesn't have air quality data"
+			},
+			"abort": {
+				"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+			},
+			"title": "Parcel locker"
 		}
 	},
 	"entity": {
