@@ -2,6 +2,8 @@ import pytest
 import pytest_socket
 import os
 import socket
+from aiohttp.resolver import ThreadedResolver
+from homeassistant.helpers import aiohttp_client
 from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.models import (
     InPostAirPoint,
@@ -12,8 +14,21 @@ _real_getaddrinfo = socket.getaddrinfo
 
 
 @pytest.fixture()
-def _allow_inpost_requests(monkeypatch, disable_mock_zeroconf_resolver):
+def _allow_inpost_requests(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", _real_getaddrinfo)
+
+    def make_resolver(*args, **kwargs):
+        resolver = ThreadedResolver()
+        # The HA test plugin calls real_close when cleaning up shared resolvers.
+        resolver.real_close = resolver.close
+        return resolver
+
+    # Live API tests need real DNS without starting Home Assistant's Zeroconf.
+    monkeypatch.setattr(
+        aiohttp_client,
+        "_async_make_resolver",
+        make_resolver,
+    )
     pytest_socket.enable_socket()
     pytest_socket.socket_allow_hosts(["inpost.pl"])
 

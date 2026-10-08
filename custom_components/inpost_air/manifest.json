@@ -19,7 +19,7 @@
   "requirements": [
     "curl-cffi==0.16.3",
     "dacite==1.9.2",
-    "python-slugify==9.1.2"
+    "python-slugify>=8.0.4,<10"
   ],
   "ssdp": [],
   "version": "1.8.1",

@@ -3,18 +3,32 @@ name = "inpost-air"
 version = "1.8.1"
 readme = "README.md"
 requires-python = ">=3.14.2"
-dependencies = ["curl-cffi==0.16.3", "dacite==1.9.2", "python-slugify==9.1.2"]
+dependencies = [
+    "curl-cffi==0.16.3",
+    "dacite==1.9.2",
+    "python-slugify>=8.0.4,<10",
+]
 
 [dependency-groups]
 dev = [
-    "homeassistant==2026.10.0b4",
+    "homeassistant==2026.10.0",
     "pytest>=8.2.0",
     "pytest-cov>=5.0.0",
-    "pytest-homeassistant-custom-component>=0.13.370",
+    "pytest-homeassistant-custom-component==0.13.370",
     "pytest-json-ctrf>=0.3.5",
     "ruff>=0.13.0",
 ]
 
+[tool.uv]
+# The current pytest-homeassistant-custom-component pins beta HA; test against the stable default instead.
+override-dependencies = ["homeassistant==2026.10.0"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = ["api"]
+
+[tool.ha-debug]
+versions = [
+    { ha = "2025.12.4", python = "3.13.7" },
+    { ha = "2026.6.4", python = "3.14.5" },
+]

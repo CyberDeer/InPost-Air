@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Prepare HA 2026.6.4",
+      "type": "process",
+      "command": "uv",
+      "args": ["run", "--no-project", "--python", "3.13.7", "python", "tools/prepare-ha.py", "--version", "2026.6.4"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Prepare HA 2025.12.4",
+      "type": "process",
+      "command": "uv",
+      "args": ["run", "--no-project", "--python", "3.13.7", "python", "tools/prepare-ha.py", "--version", "2025.12.4"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}
