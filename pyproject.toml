@@ -7,7 +7,7 @@ dependencies = ["curl-cffi==0.16.3", "dacite==1.9.2", "python-slugify==9.1.2"]
 
 [dependency-groups]
 dev = [
-    "homeassistant==2025.12.4",
+    "homeassistant==2026.9.0",
     "pytest>=8.2.0",
     "pytest-cov>=5.0.0",
     "pytest-homeassistant-custom-component>=0.13.132",
