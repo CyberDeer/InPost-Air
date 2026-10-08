@@ -1,7 +1,8 @@
 """Test locker migration and subentry lifecycle."""
 
 from dataclasses import asdict
-from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -15,7 +16,42 @@ from custom_components.inpost_air import (
 )
 from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.const import DOMAIN
+from custom_components.inpost_air.migration import _move_registrations
 from tests.test_config_flow import mocked_lockers_list
+
+
+@pytest.mark.parametrize("source_subentry_id", [None, "old-subentry"])
+def test_move_registrations_legacy_device_registry(hass, source_subentry_id):
+    """Keep the migration API supported by Home Assistant 2025.12.4."""
+    source = SimpleNamespace(entry_id="source")
+    target = SimpleNamespace(entry_id="target")
+    device = SimpleNamespace(
+        id="device", config_entries_subentries={"source": {source_subentry_id}}
+    )
+    unrelated = SimpleNamespace(
+        id="unrelated", config_entries_subentries={"source": {"other-subentry"}}
+    )
+    registry = Mock()
+    with (
+        patch.object(dr, "async_get", return_value=registry),
+        patch.object(
+            dr, "async_entries_for_config_entry", return_value=[device, unrelated]
+        ),
+        patch.object(er, "async_entries_for_config_entry", return_value=[]),
+    ):
+        _move_registrations(hass, source, target, "new-subentry", source_subentry_id)
+    assert registry.async_update_device.call_args_list == [
+        call(
+            "device",
+            add_config_entry_id="target",
+            add_config_subentry_id="new-subentry",
+        ),
+        call(
+            "device",
+            remove_config_entry_id="source",
+            remove_config_subentry_id=source_subentry_id,
+        ),
+    ]
 
 
 def legacy_entry(hass, code, version=2):
@@ -59,9 +95,14 @@ async def test_consolidation(hass, version):
     for code, device, entity in [("AAA", device1, entity1), ("BBB", device2, entity2)]:
         sub = next(sub for sub in first.subentries.values() if sub.unique_id == code)
         updated_device = dr.async_get(hass).async_get(device.id)
-        assert updated_device.config_entries_subentries == {
-            first.entry_id: {sub.subentry_id}
-        }
+        # HA reports deprecated property access outside an integration as an
+        # error. Keep this assertion on the API supported by older HA versions.
+        with patch.object(
+            dr, "_report_deprecated_config_entries_property", create=True
+        ):
+            assert updated_device.config_entries_subentries == {
+                first.entry_id: {sub.subentry_id}
+            }
         updated_entity = er.async_get(hass).async_get(entity.entity_id)
         assert updated_entity.config_entry_id == first.entry_id
         assert updated_entity.config_subentry_id == sub.subentry_id

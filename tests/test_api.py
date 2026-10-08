@@ -1,15 +1,19 @@
 import pytest
 import pytest_socket
 import os
+import socket
 from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.models import (
     InPostAirPoint,
     InPostAirPointCoordinates,
 )
 
+_real_getaddrinfo = socket.getaddrinfo
+
 
 @pytest.fixture()
-def _allow_inpost_requests():
+def _allow_inpost_requests(monkeypatch, disable_mock_zeroconf_resolver):
+    monkeypatch.setattr(socket, "getaddrinfo", _real_getaddrinfo)
     pytest_socket.enable_socket()
     pytest_socket.socket_allow_hosts(["inpost.pl"])
 
