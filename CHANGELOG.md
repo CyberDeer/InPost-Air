@@ -1,3 +1,17 @@
+# [1.8.0](https://github.com/CyberDeer/InPost-Air/compare/v1.7.0...v1.8.0) (2026-10-08)
+
+
+### Bug Fixes
+
+* remove deprecated calls ([8dd07f4](https://github.com/CyberDeer/InPost-Air/commit/8dd07f42b38168d04f53d3df29c908c10ff440b8)), closes [#132](https://github.com/CyberDeer/InPost-Air/issues/132)
+
+
+### Features
+
+* bump required HA version ([c711530](https://github.com/CyberDeer/InPost-Air/commit/c71153075ca7bc38a016ca9bbea1fb6aded46d5b))
+* migrate to multi-subentries setup ([40f408c](https://github.com/CyberDeer/InPost-Air/commit/40f408c5e314881b06e968eb44be0404dfbe1f9c))
+* use curl-cffi to bypass Cloudflare block ([198cf06](https://github.com/CyberDeer/InPost-Air/commit/198cf06e0016b8bdc92d5acd7fa683d7e76bec53))
+
 # [1.7.0](https://github.com/CyberDeer/InPost-Air/compare/v1.6.2...v1.7.0) (2025-11-29)
 
 
