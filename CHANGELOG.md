@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/CyberDeer/InPost-Air/compare/v1.8.1...v1.8.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* make integration work with older HA versions ([1dd0e87](https://github.com/CyberDeer/InPost-Air/commit/1dd0e87f4f97215a0125a40fcc8745c278c8c93e))
+
 ## [1.8.1](https://github.com/CyberDeer/InPost-Air/compare/v1.8.0...v1.8.1) (2026-10-08)
 
 
