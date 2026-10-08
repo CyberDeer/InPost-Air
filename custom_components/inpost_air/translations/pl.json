@@ -11,6 +11,9 @@
     },
     "config_subentries": {
         "parcel_locker": {
+            "initiate_flow": {
+                "user": "Dodaj paczkomat"
+            },
             "abort": {
                 "already_configured": "Urządzenie jest już skonfigurowane"
             },

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 import re
 from aiohttp import ClientResponse, ClientResponseError
+from curl_cffi import AsyncSession, CurlError
 from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -36,6 +37,7 @@ class InPostApi:
         """Init class."""
         self.hass = hass
         self.session = async_create_clientsession(hass)
+        self._parcel_locker_urls: dict[str, str] = {}
 
     async def _request(
         self,
@@ -144,10 +146,9 @@ class InPostApi:
 
     async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
         """Find parcel locker ID by its code."""
-        response = await self._request(
-            method="get",
-            url=get_parcel_locker_url(point),
-        )
+        url = get_parcel_locker_url(point)
+        self._parcel_locker_urls[point.n] = url
+        response = await self._request(method="get", url=url)
         match = re.search(
             r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
             await response.text(),
@@ -159,23 +160,43 @@ class InPostApi:
         self, locker_code: str, locker_id: str
     ) -> ParcelLockerAirDataResponse:
         """Get air data from parcel locker."""
-        try:
-            response = await self._request(
-                method="post",
-                url=f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
-                headers={"X-Requested-With": "XMLHttpRequest"},
-                raise_client_response_error=True,
-            )
-        except ClientResponseError as e:
-            if e.status == 404:
-                raise InPostAirApiClientSensorsMissingError(
-                    "Air sensors are not available"
-                ) from e
-            raise InPostAirApiClientError("Something really wrong happened!") from e
-        except:
-            raise
+        page_url = self._parcel_locker_urls.get(locker_code)
 
-        return from_dict(ParcelLockerAirDataResponse, await response.json())
+        if page_url is None:
+            point = await self.search_parcel_locker(locker_code)
+
+            if point is None:
+                raise InPostAirApiClientError("Parcel locker was not found")
+
+            page_url = get_parcel_locker_url(point)
+            self._parcel_locker_urls[locker_code] = page_url
+
+        try:
+            async with AsyncSession(impersonate="chrome", timeout=30) as session:
+                page = await session.get(page_url)
+                page.raise_for_status()
+                response = await session.post(
+                    f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
+                    headers={
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Origin": "https://inpost.pl",
+                        "Referer": page_url,
+                    },
+                )
+
+                if response.status_code == 404:
+                    raise InPostAirApiClientSensorsMissingError(
+                        "Air sensors are not available"
+                    )
+
+                if response.status_code == 403:
+                    raise InPostAirApiClientError("InPost is blocking access")
+
+                response.raise_for_status()
+
+                return from_dict(ParcelLockerAirDataResponse, response.json())
+        except CurlError as err:
+            raise InPostAirApiClientError("Error requesting InPost air data") from err
 
 
 class InPostAirApiClientError(Exception):

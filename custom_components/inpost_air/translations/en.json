@@ -11,6 +11,9 @@
     },
     "config_subentries": {
         "parcel_locker": {
+            "initiate_flow": {
+                "user": "Add parcel locker"
+            },
             "abort": {
                 "already_configured": "Device is already configured"
             },
