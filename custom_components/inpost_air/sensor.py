@@ -2,7 +2,6 @@
 
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     UnitOfPressure,
     UnitOfTemperature,
@@ -21,6 +20,14 @@ from custom_components.inpost_air.sensors.parcel_locker_sensor import (
 )
 from .const import Entities
 
+try:
+    from homeassistant.const import UnitOfDensity
+except ImportError:
+    # UnitOfDensity was introduced in Home Assistant 2026.7.
+    _CONCENTRATION_UNIT = "μg/m³"
+else:
+    _CONCENTRATION_UNIT = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+
 # pylint: disable=locally-disabled, unexpected-keyword-arg
 PARCEL_LOCKER_SENSORS = [
     ParcelLockerSensorEntityDescription(
@@ -34,7 +41,7 @@ PARCEL_LOCKER_SENSORS = [
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM2_5,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         value_fn=lambda data: item.value
@@ -73,14 +80,14 @@ PARCEL_LOCKER_SENSORS = [
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM1,
         value_fn=lambda data: item.value if (item := data.get(Entities.PM1)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         value_fn=lambda data: item.value if (item := data.get(Entities.PM10)) else None,
@@ -99,21 +106,21 @@ PARCEL_LOCKER_SENSORS = [
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:molecule",
         value_fn=lambda data: item.value if (item := data.get(Entities.PM4)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.NO2,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         value_fn=lambda data: item.value if (item := data.get(Entities.NO2)) else None,
     ),
     ParcelLockerSensorEntityDescription(
         key=Entities.O3,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=_CONCENTRATION_UNIT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.OZONE,
         value_fn=lambda data: item.value if (item := data.get(Entities.O3)) else None,

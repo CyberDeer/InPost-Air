@@ -4,7 +4,7 @@ from datetime import timedelta
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import entity_registry
 from homeassistant.util import dt as dt_util
 
 from custom_components.inpost_air import utils
@@ -53,14 +53,7 @@ class AirQualityIndexSensor(SensorEntity):
         """
         Retrieves data from sensors for the specified time period.
         """
-        device = device_registry.async_get(self.hass).async_get_device(
-            identifiers=self.device_info.get("identifiers")
-            if self.device_info is not None
-            else None,
-            connections=self.device_info.get("connections")
-            if self.device_info is not None
-            else None,
-        )
+        device = self.device_entry
 
         if device is None:
             return []
