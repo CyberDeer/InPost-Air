@@ -1,3 +1,11 @@
+## [1.8.1](https://github.com/CyberDeer/InPost-Air/compare/v1.8.0...v1.8.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* python slugify bump ([#136](https://github.com/CyberDeer/InPost-Air/issues/136)) ([8a81602](https://github.com/CyberDeer/InPost-Air/commit/8a81602a5761e78c335b3b37d30e270c05661df2))
+* update tests to pass ([de76f35](https://github.com/CyberDeer/InPost-Air/commit/de76f352026406e0d64c2b694ac8bf7da6e822ac))
+
 # [1.8.0](https://github.com/CyberDeer/InPost-Air/compare/v1.7.0...v1.8.0) (2026-10-08)
 
 
