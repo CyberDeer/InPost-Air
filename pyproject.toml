@@ -16,7 +16,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pytest-homeassistant-custom-component==0.13.370",
     "pytest-json-ctrf>=0.3.5",
-    "ruff>=0.13.0",
+    "ruff>=0.16.10",
 ]
 
 [tool.uv]
