@@ -1,3 +1,10 @@
+## [1.8.3](https://github.com/CyberDeer/InPost-Air/compare/v1.8.2...v1.8.3) (2026-10-09)
+
+
+### Bug Fixes
+
+* prevent unavailable lockers from blocking integration setup ([d5cf187](https://github.com/CyberDeer/InPost-Air/commit/d5cf18723852ed033e7565b3723879617263e404)), closes [#143](https://github.com/CyberDeer/InPost-Air/issues/143)
+
 ## [1.8.2](https://github.com/CyberDeer/InPost-Air/compare/v1.8.1...v1.8.2) (2026-10-08)
 
 
