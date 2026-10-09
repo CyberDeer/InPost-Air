@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.2"
 
 [manifest]
@@ -1281,7 +1281,7 @@ dev = [
     { name = "pytest", specifier = ">=8.2.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "pytest-homeassistant-custom-component", specifier = "==0.13.370" },
-    { name = "pytest-json-ctrf", specifier = ">=0.3.5" },
+    { name = "pytest-json-ctrf", specifier = ">=0.6.1" },
     { name = "ruff", specifier = ">=0.13.0" },
 ]
 
@@ -2285,14 +2285,14 @@ wheels = [
 
 [[package]]
 name = "pytest-json-ctrf"
-version = "0.3.6"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7a/3d/55e1de95b82b7630e9112191d7b8b8c5a466a25591c284ccd12f6f0b6a28/pytest_json_ctrf-0.3.6.tar.gz", hash = "sha256:750f7d00d2519212271227d8e7c5870beb8d31f72f7608c0ed459a43b1e71e02", size = 6707, upload-time = "2025-12-28T11:04:59.63Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/16/74030c98c0f3001c24c356b5fdb40191065b78556a4750fc8ff571373f41/pytest_json_ctrf-0.6.1.tar.gz", hash = "sha256:c968bbee43ea7f885434ec105aa9ecad3d0576f70fbf15c329ed8362ae114eb8", size = 11099, upload-time = "2026-10-04T13:27:09.661Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/60/d1b84bc0a5cc5d73e0807fe799d9a3c3dfde3abf7907667882b3c74ba4c9/pytest_json_ctrf-0.3.6-py3-none-any.whl", hash = "sha256:82231614ff52b5eec14e214761eb2d785b45c062775b315a67b44659a42f5a2d", size = 6877, upload-time = "2025-12-28T11:04:58.497Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/18/cf304be64475ff53760038e93512fff2b250c73d21ff69b1e843507ef8f7/pytest_json_ctrf-0.6.1-py3-none-any.whl", hash = "sha256:b5593623b5b334dd1e75b7a1ceb8f266694c0fa0e562efbf19db3c7f076db26a", size = 10285, upload-time = "2026-10-04T13:27:08.292Z" },
 ]
 
 [[package]]
