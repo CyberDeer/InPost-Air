@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 import re
+from urllib.parse import urlsplit
 from aiohttp import ClientResponse, ClientResponseError
 from curl_cffi import AsyncSession, CurlError
 from dacite import from_dict
@@ -175,6 +176,12 @@ class InPostApi:
             async with AsyncSession(impersonate="chrome", timeout=30) as session:
                 page = await session.get(page_url)
                 page.raise_for_status()
+
+                if urlsplit(page.url).path.rstrip("/") == "/znajdz-paczkomat":
+                    raise InPostAirApiClientSensorsMissingError(
+                        "Parcel locker page redirects to the parcel locker finder"
+                    )
+
                 response = await session.post(
                     f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
                     headers={

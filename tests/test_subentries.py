@@ -11,6 +11,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.inpost_air import (
     async_setup,
+    async_setup_entry,
     async_migrate_entry,
     config_flow,
 )
@@ -18,6 +19,30 @@ from custom_components.inpost_air.api import InPostApi
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.migration import _move_registrations
 from tests.test_config_flow import mocked_lockers_list
+
+
+async def test_setup_isolates_unavailable_locker(hass):
+    """A failed locker must not prevent healthy subentries from loading."""
+    entry, _, _ = legacy_entry(hass, "AAA")
+    legacy_entry(hass, "BBB")
+
+    assert await async_setup(hass, {})
+
+    with (
+        patch.object(InPostApi, "find_parcel_locker_id", side_effect=[None, "123"]),
+        patch(
+            "custom_components.inpost_air.InPostAirDataCoordinator.async_config_entry_first_refresh",
+        ),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as forward,
+    ):
+        assert await async_setup_entry(hass, entry)
+
+    forward.assert_awaited_once()
+
+    assert [data.parcel_locker.locker_code for data in entry.runtime_data.values()] == [
+        "BBB"
+    ]
+    assert len(entry.subentries) == 2
 
 
 @pytest.mark.parametrize("source_subentry_id", [None, "old-subentry"])
