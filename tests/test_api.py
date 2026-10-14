@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_socket
 import os
@@ -85,3 +86,50 @@ async def test_find_parcel_locker_id(hass, _allow_inpost_requests):
 async def test_air_data(hass, _allow_inpost_requests):
     response = await InPostApi(hass).get_parcel_locker_air_data("AJE01BAPP", "56311")
     assert response is not None
+
+
+def _mock_page(html: str) -> Mock:
+    page = Mock()
+    page.text = AsyncMock(return_value=html)
+    return page
+
+
+async def test_find_parcel_locker_id_falls_back_to_english_page(hass):
+    """Locker without a Polish page is resolved from its English page."""
+    point = Mock(spec=InPostAirPoint)
+    point.n = "KUKU01BAPP"
+    point.g = "kuków"
+    point.e = "Kuków"
+    point.r = "małopolskie"
+    api = InPostApi(hass)
+    marker = (
+        '<div data-shipx-url="/en/shipx-point-data/12345/KUKU01BAPP/air_index_level">'
+    )
+
+    with patch.object(
+        api,
+        "_request",
+        side_effect=[_mock_page("<html>finder</html>"), _mock_page(marker)],
+    ) as request:
+        assert await api.find_parcel_locker_id(point) == "12345"
+
+    en_url = "https://inpost.pl/en/parcel-locker-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
+    assert request.call_args.kwargs["url"] == en_url
+    assert api._parcel_locker_urls["KUKU01BAPP"] == en_url
+
+
+async def test_find_parcel_locker_id_without_any_page(hass):
+    """Locker missing in both languages has no ID."""
+    point = Mock(spec=InPostAirPoint)
+    point.n = "KUKU02APP"
+    point.g = "kuków"
+    point.e = "Kuków"
+    point.r = "małopolskie"
+    api = InPostApi(hass)
+
+    with patch.object(
+        api, "_request", side_effect=[_mock_page(""), _mock_page("")]
+    ) as request:
+        assert await api.find_parcel_locker_id(point) is None
+
+    assert request.call_count == 2

@@ -57,3 +57,15 @@ def get_parcel_locker_url(point: InPostAirPoint) -> str:
         lowercase=True,
     )
     return f"https://inpost.pl/{pathname}"
+
+
+def get_parcel_locker_en_url(point: InPostAirPoint) -> str:
+    """
+    Generates a URL for the English page of a parcel locker. Some lockers
+    have only this page, while the Polish one redirects to the locker finder.
+    """
+    pathname = slugify(
+        f"parcel-locker-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
+        lowercase=True,
+    )
+    return f"https://inpost.pl/en/{pathname}"

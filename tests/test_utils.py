@@ -9,7 +9,10 @@ from custom_components.inpost_air.models import (
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.utils import can_be_float, get_device_info, haversine
 from homeassistant.helpers.device_registry import DeviceInfo
-from custom_components.inpost_air.utils import get_parcel_locker_url
+from custom_components.inpost_air.utils import (
+    get_parcel_locker_en_url,
+    get_parcel_locker_url,
+)
 
 
 def test_haversine():
@@ -120,3 +123,18 @@ def test_get_parcel_locker_url():
     expected_path_special = "paczkomat-ga-ne-el-paczkomaty-ro"
     expected_url_special = f"https://inpost.pl/{expected_path_special}"
     assert get_parcel_locker_url(mock_point) == expected_url_special
+
+
+def test_get_parcel_locker_en_url():
+    """Test get_parcel_locker_en_url function."""
+
+    mock_point = Mock(spec=InPostAirPoint)
+    mock_point.n = "KUKU01BAPP"
+    mock_point.g = "kuków"
+    mock_point.e = "Kuków"
+    mock_point.r = "małopolskie"
+
+    expected_path = "parcel-locker-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
+    assert (
+        get_parcel_locker_en_url(mock_point) == f"https://inpost.pl/en/{expected_path}"
+    )

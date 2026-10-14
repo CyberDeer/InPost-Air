@@ -11,7 +11,10 @@ from dacite import from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from custom_components.inpost_air.models import InPostAirPoint
-from custom_components.inpost_air.utils import get_parcel_locker_url
+from custom_components.inpost_air.utils import (
+    get_parcel_locker_en_url,
+    get_parcel_locker_url,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,15 +150,20 @@ class InPostApi:
 
     async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
         """Find parcel locker ID by its code."""
-        url = get_parcel_locker_url(point)
-        self._parcel_locker_urls[point.n] = url
-        response = await self._request(method="get", url=url)
-        match = re.search(
-            r"data-shipx-url=\"/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
-            await response.text(),
-        )
+        self._parcel_locker_urls[point.n] = get_parcel_locker_url(point)
 
-        return None if match is None else match.group(1)
+        for url in (get_parcel_locker_url(point), get_parcel_locker_en_url(point)):
+            response = await self._request(method="get", url=url)
+            match = re.search(
+                r"data-shipx-url=\"(?:/en)?/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
+                await response.text(),
+            )
+
+            if match is not None:
+                self._parcel_locker_urls[point.n] = url
+                return match.group(1)
+
+        return None
 
     async def get_parcel_locker_air_data(
         self, locker_code: str, locker_id: str
