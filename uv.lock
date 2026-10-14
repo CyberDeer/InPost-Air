@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.2"
 
 [manifest]
@@ -1280,7 +1280,7 @@ dev = [
     { name = "homeassistant", specifier = "==2026.10.0" },
     { name = "pytest", specifier = ">=8.2.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
-    { name = "pytest-homeassistant-custom-component", specifier = "==0.13.370" },
+    { name = "pytest-homeassistant-custom-component", specifier = "==0.13.372" },
     { name = "pytest-json-ctrf", specifier = ">=0.3.5" },
     { name = "ruff", specifier = ">=0.13.0" },
 ]
@@ -2244,7 +2244,7 @@ wheels = [
 
 [[package]]
 name = "pytest-homeassistant-custom-component"
-version = "0.13.370"
+version = "0.13.372"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohasupervisor" },
@@ -2278,9 +2278,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "unidiff" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/99/a9168b5347c519791109f99b892d59332a5c65c32c9d23b271de43536cb3/pytest_homeassistant_custom_component-0.13.370.tar.gz", hash = "sha256:473bdfc456ece3c3c503844e3565370d27fbc95b888551c0d7b2f81ee06395d2", size = 82218, upload-time = "2026-10-07T11:29:33.35Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/40/af20e43d16ce434e9039d9c3d92722dea5e8d95e194fd05c5a703f5b0ed0/pytest_homeassistant_custom_component-0.13.372.tar.gz", hash = "sha256:e9b5fd692feb4d434784a272648e7bacb284cae2029647b7754568ce5f9c402f", size = 82187, upload-time = "2026-10-11T11:10:34.921Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/0e/d35141a1854001a8dbfcf9206c4507b5197952eec21c557aa12c81abfccf/pytest_homeassistant_custom_component-0.13.370-py3-none-any.whl", hash = "sha256:9f41bbe5415740349f17b401508f679109555bc40af9c9a1e3b820dfb0f4b619", size = 88188, upload-time = "2026-10-07T11:29:31.996Z" },
+    { url = "https://files.pythonhosted.org/packages/91/e3/14c0606c5757a978772aba2da40095181765d9c8477d6320d2b065f29df0/pytest_homeassistant_custom_component-0.13.372-py3-none-any.whl", hash = "sha256:fbc048034cf63c1923c42092b8b09605f183e9a9da1f1c47dfb578afdbd1b1e6", size = 88186, upload-time = "2026-10-11T11:10:33.584Z" },
 ]
 
 [[package]]
