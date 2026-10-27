@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -28,10 +29,14 @@ async def test_setup_isolates_unavailable_locker(hass):
 
     assert await async_setup(hass, {})
 
+    def fail_unavailable(coordinator):
+        if coordinator.parcel_locker.locker_code == "AAA":
+            raise ConfigEntryNotReady("Air sensors are not available")
+
     with (
-        patch.object(InPostApi, "find_parcel_locker_id", side_effect=[None, "123"]),
         patch(
             "custom_components.inpost_air.InPostAirDataCoordinator.async_config_entry_first_refresh",
+            side_effect=fail_unavailable,
         ),
         patch.object(hass.config_entries, "async_forward_entry_setups") as forward,
     ):
