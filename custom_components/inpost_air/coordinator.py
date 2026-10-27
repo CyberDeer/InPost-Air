@@ -4,14 +4,13 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-import re
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .models import ParcelLocker
-from .api import InPostAirApiClientError, InPostApi
+from .api import InPostAirApiClientError, InPostApi, ParcelLockerAirDataResponse
 from .const import Entities
+from .models import ParcelLocker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,30 +32,41 @@ class ValueWithoutNorm:
     value: float
 
 
-def create_value(sensor_line: str) -> ValueWithNorm | ValueWithoutNorm | None:
-    """Create value class from sensor data string."""
-    if match := re.match(r"PM25:(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)", sensor_line):
-        return ValueWithNorm(
-            Entities.PM2_5, float(match.group(1)), float(match.group(2))
-        )
-    if match := re.match(r"PM10:(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)", sensor_line):
-        return ValueWithNorm(
-            Entities.PM10, float(match.group(1)), float(match.group(2))
-        )
-    if match := re.match(r"PM1:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.PM1, float(match.group(1)))
-    if match := re.match(r"PM4:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.PM4, float(match.group(1)))
-    if match := re.match(r"TEMPERATURE:(-?\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.Temperature, float(match.group(1)))
-    if match := re.match(r"PRESSURE:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.Pressure, float(match.group(1)))
-    if match := re.match(r"HUMIDITY:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.Humidity, float(match.group(1)))
-    if match := re.match(r"NO2:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.NO2, float(match.group(1)))
-    if match := re.match(r"O3:(\d+(?:\.\d+)?):", sensor_line):
-        return ValueWithoutNorm(Entities.O3, float(match.group(1)))
+_SENSOR_BY_NAME = {
+    "PM25": Entities.PM2_5,
+    "PM10": Entities.PM10,
+    "PM1": Entities.PM1,
+    "PM4": Entities.PM4,
+    "TEMPERATURE": Entities.Temperature,
+    "PRESSURE": Entities.Pressure,
+    "HUMIDITY": Entities.Humidity,
+    "NO2": Entities.NO2,
+    "O3": Entities.O3,
+}
+
+
+def readings_from_air_data(
+    data: ParcelLockerAirDataResponse,
+) -> dict[str, ValueWithNorm | ValueWithoutNorm]:
+    """Map the points API payload onto sensor entities."""
+    norms = {
+        standard.pollutant: standard.percent
+        for standard in data.current.standards or []
+        if standard.name == "WHO" and standard.pollutant in {"PM25", "PM10"}
+    }
+    readings: dict[str, ValueWithNorm | ValueWithoutNorm] = {}
+
+    for item in data.current.values:
+        entity = _SENSOR_BY_NAME.get(item.name)
+        if entity is None:
+            continue
+
+        if item.name in norms:
+            readings[entity] = ValueWithNorm(entity, item.value, norms[item.name])
+        else:
+            readings[entity] = ValueWithoutNorm(entity, item.value)
+
+    return readings
 
 
 class InPostAirDataCoordinator(DataUpdateCoordinator):
@@ -84,12 +94,10 @@ class InPostAirDataCoordinator(DataUpdateCoordinator):
         try:
             async with asyncio.timeout(10):
                 data = await self.api_client.get_parcel_locker_air_data(
-                    self.parcel_locker.locker_code, self.parcel_locker.locker_id
+                    self.parcel_locker.locker_code
                 )
 
-                return {
-                    x.name: x for line in data.air_sensors if (x := create_value(line))
-                }
+                return readings_from_air_data(data)
         except InPostAirApiClientError as err:
             raise UpdateFailed(err) from err
         except Exception as err:

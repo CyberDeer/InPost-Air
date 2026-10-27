@@ -44,11 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     for subentry_id, subentry in entry.subentries.items():
         point = from_dict(InPostAirPoint, dict(subentry.data["parcel_locker"]))
         try:
-            parcel_locker_id = await api_client.find_parcel_locker_id(point)
-            if parcel_locker_id is None:
-                raise InPostAirApiClientError("Parcel locker page has no air sensor ID")
-
-            parcel_locker = ParcelLocker(point.n, parcel_locker_id)
+            parcel_locker = ParcelLocker(point.n, point.n)
             coordinator = InPostAirDataCoordinator(hass, api_client, parcel_locker)
             await coordinator.async_config_entry_first_refresh()
         except (InPostAirApiClientError, ConfigEntryNotReady) as ex:
