@@ -1,3 +1,10 @@
+## [1.8.5](https://github.com/CyberDeer/InPost-Air/compare/v1.8.4...v1.8.5) (2026-11-15)
+
+
+### Bug Fixes
+
+* resolve hassfest manifest, translation and config schema errors ([aa2aaa2](https://github.com/CyberDeer/InPost-Air/commit/aa2aaa29f8d73235cfa5531efc687750944f59bf))
+
 ## [1.8.4](https://github.com/CyberDeer/InPost-Air/compare/v1.8.3...v1.8.4) (2026-11-15)
 
 
