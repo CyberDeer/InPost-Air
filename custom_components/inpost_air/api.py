@@ -3,18 +3,13 @@
 import asyncio
 from dataclasses import dataclass
 import logging
-import re
-from urllib.parse import urlsplit
+
 from aiohttp import ClientResponse, ClientResponseError
-from curl_cffi import AsyncSession, CurlError
-from dacite import from_dict
+from dacite import Config, from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+
 from custom_components.inpost_air.models import InPostAirPoint
-from custom_components.inpost_air.utils import (
-    get_parcel_locker_en_url,
-    get_parcel_locker_url,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +22,58 @@ class ParcelLockerListResponse:
     items: list[InPostAirPoint]
 
 
+# Public points API. The InPost app reads the same payload shape
+# (`fromDateTime`, `values`, `standards`, `index`).
+AIR_SENSORS_URL = (
+    "https://api-pl-points.easypack24.net/v1/points/{locker_code}/air-sensors"
+)
+
+
+@dataclass
+class AirSensorReading:
+    """Single measurement from the points air-sensors endpoint."""
+
+    name: str
+    value: float
+    level: str | None = None
+
+
+@dataclass
+class AirSensorIndex:
+    """Official air quality index returned with the measurements."""
+
+    name: str
+    value: float
+    level: str | None = None
+
+
+@dataclass
+class AirSensorStandard:
+    """Limit and percentage of a reference standard, such as WHO."""
+
+    name: str
+    pollutant: str
+    limit: float
+    percent: float
+
+
+@dataclass
+class AirSensorWindow:
+    """Current measurement window."""
+
+    fromDateTime: str
+    tillDateTime: str
+    values: list[AirSensorReading]
+    index: AirSensorIndex | None = None
+    standards: list[AirSensorStandard] | None = None
+
+
 @dataclass
 class ParcelLockerAirDataResponse:
-    message: str
-    air_index_level: str
-    air_sensors: list[str]
+    """Air sensor payload for one parcel locker."""
+
+    current: AirSensorWindow
+    sensorOrigin: int | None = None
 
 
 class InPostApi:
@@ -41,7 +83,6 @@ class InPostApi:
         """Init class."""
         self.hass = hass
         self.session = async_create_clientsession(hass)
-        self._parcel_locker_urls: dict[str, str] = {}
 
     async def _request(
         self,
@@ -148,70 +189,39 @@ class InPostApi:
 
         return response_data.items
 
-    async def find_parcel_locker_id(self, point: InPostAirPoint) -> str | None:
-        """Find parcel locker ID by its code."""
-        self._parcel_locker_urls[point.n] = get_parcel_locker_url(point)
-
-        for url in (get_parcel_locker_url(point), get_parcel_locker_en_url(point)):
-            response = await self._request(method="get", url=url)
-            match = re.search(
-                r"data-shipx-url=\"(?:/en)?/shipx-point-data/(.*?)/(.*?)/air_index_level\"",
-                await response.text(),
-            )
-
-            if match is not None:
-                self._parcel_locker_urls[point.n] = url
-                return match.group(1)
-
-        return None
-
     async def get_parcel_locker_air_data(
-        self, locker_code: str, locker_id: str
+        self, locker_code: str
     ) -> ParcelLockerAirDataResponse:
-        """Get air data from parcel locker."""
-        page_url = self._parcel_locker_urls.get(locker_code)
-
-        if page_url is None:
-            point = await self.search_parcel_locker(locker_code)
-
-            if point is None:
-                raise InPostAirApiClientError("Parcel locker was not found")
-
-            page_url = get_parcel_locker_url(point)
-            self._parcel_locker_urls[locker_code] = page_url
-
+        """Get air data from the public points API."""
         try:
-            async with AsyncSession(impersonate="chrome", timeout=30) as session:
-                page = await session.get(page_url)
-                page.raise_for_status()
+            async with asyncio.timeout(30):
+                async with self.session.get(
+                    AIR_SENSORS_URL.format(locker_code=locker_code)
+                ) as response:
+                    if response.status == 404:
+                        raise InPostAirApiClientSensorsMissingError(
+                            "Air sensors are not available"
+                        )
 
-                if urlsplit(page.url).path.rstrip("/") == "/znajdz-paczkomat":
-                    raise InPostAirApiClientSensorsMissingError(
-                        "Parcel locker page redirects to the parcel locker finder"
-                    )
+                    response.raise_for_status()
+                    payload = await response.json()
+        except InPostAirApiClientSensorsMissingError:
+            raise
+        except TimeoutError as err:
+            _LOGGER.warning("Request timed out")
+            raise InPostAirApiClientError("Request timed out") from err
+        except ClientResponseError as err:
+            raise InPostAirApiClientError("Something really wrong happened!") from err
+        except Exception as exception:  # pylint: disable=broad-except
+            raise InPostAirApiClientError(
+                "Something really wrong happened!"
+            ) from exception
 
-                response = await session.post(
-                    f"https://inpost.pl/shipx-point-data/{locker_id}/{locker_code}/air_index_level",
-                    headers={
-                        "X-Requested-With": "XMLHttpRequest",
-                        "Origin": "https://inpost.pl",
-                        "Referer": page_url,
-                    },
-                )
-
-                if response.status_code == 404:
-                    raise InPostAirApiClientSensorsMissingError(
-                        "Air sensors are not available"
-                    )
-
-                if response.status_code == 403:
-                    raise InPostAirApiClientError("InPost is blocking access")
-
-                response.raise_for_status()
-
-                return from_dict(ParcelLockerAirDataResponse, response.json())
-        except CurlError as err:
-            raise InPostAirApiClientError("Error requesting InPost air data") from err
+        return from_dict(
+            ParcelLockerAirDataResponse,
+            payload,
+            config=Config(cast=[float]),
+        )
 
 
 class InPostAirApiClientError(Exception):
