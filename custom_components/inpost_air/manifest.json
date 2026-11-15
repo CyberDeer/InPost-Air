@@ -21,6 +21,6 @@
     "python-slugify>=8.0.4,<10"
   ],
   "ssdp": [],
-  "version": "1.8.3",
+  "version": "1.8.4",
   "zeroconf": []
 }

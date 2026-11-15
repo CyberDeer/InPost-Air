@@ -1,3 +1,12 @@
+## [1.8.4](https://github.com/CyberDeer/InPost-Air/compare/v1.8.3...v1.8.4) (2026-11-15)
+
+
+### Bug Fixes
+
+* autospec the first-refresh mock in unavailable-locker test ([0b2acca](https://github.com/CyberDeer/InPost-Air/commit/0b2acca4f406888c6887757895ace44b312891d6))
+* read air sensors from the public points API ([#155](https://github.com/CyberDeer/InPost-Air/issues/155)) ([93a1914](https://github.com/CyberDeer/InPost-Air/commit/93a1914ac9bb362067e67e23c1940e0bb74620fe))
+* resolve parcel locker ID from the English page when the Polish page redirects ([#146](https://github.com/CyberDeer/InPost-Air/issues/146)) ([eb72559](https://github.com/CyberDeer/InPost-Air/commit/eb72559060fcc6d6fa678b76a3477533d7b8fb18))
+
 ## [1.8.3](https://github.com/CyberDeer/InPost-Air/compare/v1.8.2...v1.8.3) (2026-10-09)
 
 
