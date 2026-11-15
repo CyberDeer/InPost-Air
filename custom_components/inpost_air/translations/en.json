@@ -11,6 +11,7 @@
     },
     "config_subentries": {
         "parcel_locker": {
+            "entry_type": "Parcel locker",
             "initiate_flow": {
                 "user": "Add parcel locker"
             },
@@ -27,8 +28,7 @@
                         "parcelLockerId": "Parcel Locker ID"
                     }
                 }
-            },
-            "title": "Parcel locker"
+            }
         }
     },
     "entity": {

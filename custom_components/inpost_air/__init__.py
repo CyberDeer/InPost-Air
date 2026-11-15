@@ -9,14 +9,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
 from custom_components.inpost_air.models import ParcelLocker
 from custom_components.inpost_air.utils import get_device_info, get_parcel_locker_url
 
 from .api import InPostAirApiClientError, InPostAirPoint, InPostApi
+from .const import DOMAIN
 from . import migration
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass

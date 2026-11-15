@@ -11,6 +11,7 @@
     },
     "config_subentries": {
         "parcel_locker": {
+            "entry_type": "Paczkomat",
             "initiate_flow": {
                 "user": "Dodaj paczkomat"
             },
@@ -27,8 +28,7 @@
                         "parcelLockerId": "Kod paczkomatu"
                     }
                 }
-            },
-            "title": "Paczkomat"
+            }
         }
     },
     "entity": {
