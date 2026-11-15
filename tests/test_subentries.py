@@ -36,6 +36,7 @@ async def test_setup_isolates_unavailable_locker(hass):
     with (
         patch(
             "custom_components.inpost_air.InPostAirDataCoordinator.async_config_entry_first_refresh",
+            autospec=True,
             side_effect=fail_unavailable,
         ),
         patch.object(hass.config_entries, "async_forward_entry_setups") as forward,
