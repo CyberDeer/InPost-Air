@@ -19,7 +19,11 @@ from homeassistant.helpers.selector import (
 )
 
 
-from .api import InPostApi
+from .api import (
+    InPostAirApiClientError,
+    InPostAirApiClientSensorsMissingError,
+    InPostApi,
+)
 from .const import CONF_PARCEL_LOCKER_ID, DOMAIN
 from .models import StoredLockerPoint
 
@@ -34,17 +38,23 @@ async def validate_input(
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     api_client = InPostApi(hass)
-    parcel_locker = await api_client.search_parcel_locker(
-        data[CONF_PARCEL_LOCKER_ID].strip().upper()
-    )
+
+    try:
+        parcel_locker = await api_client.search_parcel_locker(
+            data[CONF_PARCEL_LOCKER_ID].strip().upper()
+        )
+    except InPostAirApiClientError as exc:
+        raise CannotConnect from exc
 
     if parcel_locker is None:
         raise UnknownParcelLocker
 
     try:
         await api_client.get_parcel_locker_air_data(parcel_locker.code)
-    except Exception as exc:
+    except InPostAirApiClientSensorsMissingError as exc:
         raise ParcelLockerWithoutAirData from exc
+    except InPostAirApiClientError as exc:
+        raise CannotConnect from exc
 
     return parcel_locker
 
@@ -93,6 +103,8 @@ class ParcelLockerSubentryFlow(config_entries.ConfigSubentryFlow):
                 errors["base"] = "unknown_parcel_locker"
             except ParcelLockerWithoutAirData:
                 errors["base"] = "parcel_locker_no_data"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
                     title=f"Parcel locker {parcel_locker.code}",
@@ -100,9 +112,15 @@ class ParcelLockerSubentryFlow(config_entries.ConfigSubentryFlow):
                     unique_id=parcel_locker.code,
                 )
 
-        parcel_lockers = await InPostApi(self.hass).get_parcel_lockers_list(
-            self.hass.config.latitude, self.hass.config.longitude
-        )
+        try:
+            parcel_lockers = await InPostApi(self.hass).get_parcel_lockers_list(
+                self.hass.config.latitude, self.hass.config.longitude
+            )
+        except InPostAirApiClientError as err:
+            _LOGGER.warning("Could not fetch parcel locker list: %s", err)
+            if not errors:
+                errors["base"] = "cannot_connect"
+            parcel_lockers = []
         options = [
             SelectOptionDict(
                 label=f"{locker.name} [{locker.distance / 1000:.2f}km] ({locker.location_description or ''})",
@@ -133,3 +151,7 @@ class UnknownParcelLocker(HomeAssistantError):
 
 class ParcelLockerWithoutAirData(HomeAssistantError):
     """Parcel locker with that ID doesn't have air data."""
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""

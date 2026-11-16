@@ -20,7 +20,8 @@
             },
             "error": {
                 "unknown_parcel_locker": "Nie udało się znaleźć paczkomatu z tym kodem",
-                "parcel_locker_no_data": "Ten paczkomat nie udostępnia danych o jakości powietrza"
+                "parcel_locker_no_data": "Ten paczkomat nie udostępnia danych o jakości powietrza",
+                "cannot_connect": "Nie udało się połączyć z usługami InPost"
             },
             "step": {
                 "user": {

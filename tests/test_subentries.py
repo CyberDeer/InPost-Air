@@ -280,6 +280,7 @@ async def test_startup_consolidates_before_entry_setup(hass):
     [
         ("UnknownParcelLocker", "unknown_parcel_locker"),
         ("ParcelLockerWithoutAirData", "parcel_locker_no_data"),
+        ("CannotConnect", "cannot_connect"),
     ],
 )
 async def test_subentry_validation_errors(hass, error, expected):

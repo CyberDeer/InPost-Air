@@ -24,7 +24,8 @@
 			},
 			"error": {
 				"unknown_parcel_locker": "Couldn't find parcel locker with this ID",
-				"parcel_locker_no_data": "This parcel locker doesn't have air quality data"
+				"parcel_locker_no_data": "This parcel locker doesn't have air quality data",
+				"cannot_connect": "Could not connect to InPost services"
 			},
 			"abort": {
 				"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

@@ -1,10 +1,17 @@
 """Define tests for config flow"""
 
 from unittest.mock import AsyncMock, patch
+
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from custom_components.inpost_air import config_flow
+from custom_components.inpost_air.api import InPostAirApiClientError, InPostApi
+from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.models import (
     LegacyLockerPoint,
     InPostAirPointCoordinates,
+    StoredLockerPoint,
 )
 
 mocked_lockers_list: list[LegacyLockerPoint] = [
@@ -48,3 +55,48 @@ async def test_flow_init(hass):
         config_flow.DOMAIN, context={"source": "user"}
     )
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_validate_input_locker_lookup_unreachable(hass):
+    """Transport errors during lookup are reported as cannot_connect."""
+    with patch.object(
+        InPostApi,
+        "search_parcel_locker",
+        side_effect=InPostAirApiClientError("HTTP 503"),
+    ):
+        with pytest.raises(config_flow.CannotConnect):
+            await config_flow.validate_input(hass, {"parcelLockerId": "AJE01BAPP"})
+
+
+async def test_validate_input_air_data_unreachable(hass):
+    """A network failure on the air-sensors call is not 'no air data'."""
+    point = StoredLockerPoint("AJE01BAPP", "andrzejewo", "Warszawska", "mazowieckie")
+    with (
+        patch.object(InPostApi, "search_parcel_locker", return_value=point),
+        patch.object(
+            InPostApi,
+            "get_parcel_locker_air_data",
+            side_effect=InPostAirApiClientError("Request timed out"),
+        ),
+    ):
+        with pytest.raises(config_flow.CannotConnect):
+            await config_flow.validate_input(hass, {"parcelLockerId": "AJE01BAPP"})
+
+
+async def test_subentry_form_survives_unreachable_locker_list(hass):
+    """The form still allows manual entry when the locker list is down."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, version=3, minor_version=3, title="InPost Air", data={}
+    )
+    entry.add_to_hass(hass)
+    with patch.object(
+        InPostApi,
+        "get_parcel_lockers_list",
+        side_effect=InPostAirApiClientError("HTTP 503"),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, "parcel_locker"), context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
