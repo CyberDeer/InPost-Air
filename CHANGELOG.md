@@ -1,3 +1,19 @@
+# [1.9.0](https://github.com/CyberDeer/InPost-Air/compare/v1.8.5...v1.9.0) (2026-11-16)
+
+
+### Bug Fixes
+
+* check PM2.5 instead of PM10 for the PM2.5 norm sensor ([23e513f](https://github.com/CyberDeer/InPost-Air/commit/23e513f52af3847b3181de9c8deae1e1a37cd012))
+* keep every locker loaded when one is unavailable ([c8afed7](https://github.com/CyberDeer/InPost-Air/commit/c8afed76899dca6240370ffe159213e7919cbae1))
+* report cannot_connect instead of no air data in the locker flow ([77868c5](https://github.com/CyberDeer/InPost-Air/commit/77868c5f9095cb6061bd9af1099512737973b078))
+* report concrete API errors and guard payload parsing ([7373197](https://github.com/CyberDeer/InPost-Air/commit/7373197c4ffc8256b73eb6898d90f67bdc59c284))
+* retry transient API errors with backoff and jittered polling ([84808c4](https://github.com/CyberDeer/InPost-Air/commit/84808c46a05dd72e7ef9336071b5415196a01ce1))
+
+
+### Features
+
+* use Points API for air quality locker discovery ([1df3e97](https://github.com/CyberDeer/InPost-Air/commit/1df3e97ef27db4c1c7c99b405d6a336a3fba096b))
+
 ## [1.8.5](https://github.com/CyberDeer/InPost-Air/compare/v1.8.4...v1.8.5) (2026-11-15)
 
 

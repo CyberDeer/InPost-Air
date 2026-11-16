@@ -1,6 +1,6 @@
 [project]
 name = "inpost-air"
-version = "1.8.5"
+version = "1.9.0"
 readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
