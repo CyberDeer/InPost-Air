@@ -54,7 +54,7 @@ PARCEL_LOCKER_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:percent",
         exists_fn=lambda data: item.value is not None
-        if (item := data.get(Entities.PM10)) is not None
+        if (item := data.get(Entities.PM2_5)) is not None
         else False,
         value_fn=lambda data: item.norm
         if (item := data.get(Entities.PM2_5)) and isinstance(item, ValueWithNorm)
