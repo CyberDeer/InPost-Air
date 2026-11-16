@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .api import InPostAirPoint
 from .const import DOMAIN
+from .models import LegacyLockerPoint, StoredLockerPoint
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if config_entry.version == 1:
         hass.config_entries.async_update_entry(
             config_entry,
-            data={"parcel_locker": from_dict(InPostAirPoint, config_entry.data)},
+            data={"parcel_locker": from_dict(LegacyLockerPoint, config_entry.data)},
             version=2,
         )
 
@@ -112,8 +112,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         entry_data = config_entry.data["parcel_locker"]
         point = (
             entry_data
-            if isinstance(entry_data, InPostAirPoint)
-            else from_dict(InPostAirPoint, entry_data)
+            if isinstance(entry_data, LegacyLockerPoint)
+            else from_dict(LegacyLockerPoint, entry_data)
         )
         subentry = ConfigSubentry(
             data=MappingProxyType({"parcel_locker": asdict(point)}),
@@ -130,6 +130,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             version=3,
             minor_version=1,
         )
+
+    if config_entry.version == 3 and config_entry.minor_version < 3:
+        for subentry in list(config_entry.subentries.values()):
+            data = subentry.data["parcel_locker"]
+            point = StoredLockerPoint(
+                code=data["n"],
+                city=data["g"],
+                street=data["e"],
+                province=data["r"],
+            )
+            hass.config_entries.async_update_subentry(
+                config_entry, subentry, data={"parcel_locker": asdict(point)}
+            )
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     _LOGGER.debug(
         "Migrating %s to version %s completed", config_entry.title, config_entry.version

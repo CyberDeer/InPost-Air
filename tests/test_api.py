@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, Mock
+from urllib.parse import parse_qs, urlsplit
 import pytest
 import pytest_socket
 import socket
@@ -45,7 +46,7 @@ def _allow_inpost_requests(monkeypatch):
 @pytest.mark.parametrize("expected_lingering_timers", [True])
 @pytest.mark.api
 async def test_parcel_lockers_list(hass, _allow_inpost_requests):
-    response = await InPostApi(hass).get_parcel_lockers_list()
+    response = await InPostApi(hass).get_parcel_lockers_list(52.123, 19.321)
     assert response is not None
 
 
@@ -54,6 +55,94 @@ async def test_parcel_lockers_list(hass, _allow_inpost_requests):
 async def test_parcel_locker_search(hass, _allow_inpost_requests):
     response = await InPostApi(hass).search_parcel_locker("AJE01BAPP")
     assert response is not None
+
+
+async def test_nearby_lockers_request_and_order(hass):
+    """Calculate distances locally and sort the API's unordered points."""
+    response = Mock()
+    response.json = AsyncMock(
+        return_value={
+            "items": [
+                {
+                    "name": "BBB",
+                    "location": {"latitude": 52.223, "longitude": 19.321},
+                    "location_description": None,
+                    "air_index_level": "GOOD",
+                },
+                {
+                    "name": "AAA",
+                    "location": {"latitude": 52.123, "longitude": 19.321},
+                    "location_description": "Shop",
+                    "air_index_level": 0,
+                },
+                {"name": "MISSING", "location": None, "air_index_level": "GOOD"},
+                {
+                    "name": "NO_SENSOR",
+                    "location": {"latitude": 52.123, "longitude": 19.321},
+                    "air_index_level": None,
+                },
+                {
+                    "name": "NO_INDEX",
+                    "location": {"latitude": 52.123, "longitude": 19.321},
+                },
+            ]
+        }
+    )
+    api = InPostApi(hass)
+    api._request = AsyncMock(return_value=response)
+
+    lockers = await api.get_parcel_lockers_list(52.123, 19.321)
+    url = api._request.await_args.kwargs["url"]
+    assert parse_qs(urlsplit(url).query) == {
+        "type": ["parcel_locker_only"],
+        "fields": ["name,location,location_description,air_index_level"],
+        "per_page": ["50000"],
+    }
+    assert [point.name for point in lockers] == ["AAA", "BBB"]
+    assert lockers[0].distance == 0
+    assert lockers[1].distance == pytest.approx(11119.5, rel=0.001)
+
+
+async def test_selected_locker_address(hass):
+    """Fetch only the selected locker's address for its saved link."""
+    response = Mock()
+    response.json = AsyncMock(
+        return_value={
+            "name": "ABR01NG",
+            "address_details": {
+                "city": "Abramów",
+                "street": "Szkolna",
+                "province": "lubelskie",
+            },
+        }
+    )
+    api = InPostApi(hass)
+    api._request = AsyncMock(return_value=response)
+    point = await api.search_parcel_locker("ABR01NG")
+    assert (point.code, point.city, point.street, point.province) == (
+        "ABR01NG",
+        "abramów",
+        "Szkolna",
+        "lubelskie",
+    )
+    api._request.assert_awaited_once_with(
+        method="get",
+        url="https://api-pl-points.easypack24.net/v1/points/ABR01NG",
+        raise_client_response_error=True,
+    )
+
+
+async def test_selected_locker_not_found(hass):
+    api = InPostApi(hass)
+    api._request = AsyncMock(side_effect=ClientResponseError(Mock(), (), status=404))
+    assert await api.search_parcel_locker("UNKNOWN") is None
+
+
+async def test_selected_locker_server_error(hass):
+    api = InPostApi(hass)
+    api._request = AsyncMock(side_effect=ClientResponseError(Mock(), (), status=500))
+    with pytest.raises(InPostAirApiClientError):
+        await api.search_parcel_locker("AAA")
 
 
 @pytest.mark.parametrize("expected_lingering_timers", [True])

@@ -3,12 +3,12 @@
 from unittest.mock import AsyncMock, patch
 from custom_components.inpost_air import config_flow
 from custom_components.inpost_air.models import (
-    InPostAirPoint,
+    LegacyLockerPoint,
     InPostAirPointCoordinates,
 )
 
-mocked_lockers_list: list[InPostAirPoint] = [
-    InPostAirPoint(
+mocked_lockers_list: list[LegacyLockerPoint] = [
+    LegacyLockerPoint(
         "AJE01BAPP",
         1,
         "Market Dino",

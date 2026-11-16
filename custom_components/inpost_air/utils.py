@@ -4,7 +4,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from slugify import slugify
 
 from custom_components.inpost_air.const import DOMAIN
-from custom_components.inpost_air.models import InPostAirPoint, ParcelLocker
+from custom_components.inpost_air.models import (
+    ParcelLocker,
+    StoredLockerPoint,
+)
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -41,31 +44,16 @@ def get_device_info(parcel_locker: ParcelLocker) -> DeviceInfo:
     Get the device information for a given parcel locker.
     """
     return DeviceInfo(
-        identifiers={
-            (DOMAIN, parcel_locker.locker_code),
-            (DOMAIN, parcel_locker.locker_id),
-        },
+        identifiers={(DOMAIN, parcel_locker.locker_code)},
     )
 
 
-def get_parcel_locker_url(point: InPostAirPoint) -> str:
+def get_parcel_locker_url(point: StoredLockerPoint) -> str:
     """
-    Generates a URL for a parcel locker based on the provided InPostAirPoint.
+    Generate a URL for a parcel locker.
     """
     pathname = slugify(
-        f"paczkomat-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
+        f"paczkomat-{point.city}-{point.code}-{point.street}-paczkomaty-{point.province}",
         lowercase=True,
     )
     return f"https://inpost.pl/{pathname}"
-
-
-def get_parcel_locker_en_url(point: InPostAirPoint) -> str:
-    """
-    Generates a URL for the English page of a parcel locker. Some lockers
-    have only this page, while the Polish one redirects to the locker finder.
-    """
-    pathname = slugify(
-        f"parcel-locker-{point.g}-{point.n}-{point.e}-paczkomaty-{point.r}",
-        lowercase=True,
-    )
-    return f"https://inpost.pl/en/{pathname}"

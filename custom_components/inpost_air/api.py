@@ -3,23 +3,26 @@
 import asyncio
 from dataclasses import dataclass
 import logging
+from urllib.parse import quote, urlencode
 
 from aiohttp import ClientResponse, ClientResponseError
 from dacite import Config, from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from custom_components.inpost_air.models import InPostAirPoint
+from custom_components.inpost_air.models import StoredLockerPoint
+from custom_components.inpost_air.utils import haversine
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ParcelLockerListResponse:
-    date: str
-    page: int
-    total_pages: int
-    items: list[InPostAirPoint]
+class NearbyLocker:
+    """A nearby locker and its distance in metres."""
+
+    name: str
+    distance: float
+    location_description: str | None
 
 
 # Public points API. The InPost app reads the same payload shape
@@ -27,6 +30,7 @@ class ParcelLockerListResponse:
 AIR_SENSORS_URL = (
     "https://api-pl-points.easypack24.net/v1/points/{locker_code}/air-sensors"
 )
+POINTS_URL = "https://api-pl-points.easypack24.net/v1/points"
 
 
 @dataclass
@@ -115,79 +119,67 @@ class InPostApi:
                 "Something really wrong happened!"
             ) from exception
 
-    async def _search_easypack24_locker(
-        self, locker_code: str
-    ) -> InPostAirPoint | None:
+    async def search_parcel_locker(self, locker_code: str) -> StoredLockerPoint | None:
         """Find info about given parcel locker."""
-        if not locker_code or locker_code == "":
+        if not locker_code:
             return None
 
-        response = await self._request(
-            method="get",
-            url="https://api-shipx-pl.easypack24.net/v1/points/" + locker_code,
-        )
-        resp = await response.json()
+        try:
+            response = await self._request(
+                method="get",
+                url=f"{POINTS_URL}/{quote(locker_code, safe='')}",
+                raise_client_response_error=True,
+            )
+        except ClientResponseError as err:
+            if err.status == 404:
+                return None
 
-        error = resp.get("error")
-        if error:
-            _LOGGER.warning(f"easypack24.net for {locker_code} returned error: {resp}")
-            return None
+            raise InPostAirApiClientError("Failed to find parcel locker") from err
 
-        resp_address = resp.get("address_details", {})
-        location = resp.get("location", {"latitude": "0", "longitude": "0"})
-        city = resp_address.get("city") or ""
+        payload = await response.json()
+        address = payload.get("address_details") or {}
 
-        parcel_locker = {
-            "n": resp["name"],
-            "t": 1,
-            "d": resp["location_description"],
-            "m": resp.get("apm_doubled") or "",
-            "q": resp.get("partner_id") or "",
-            "f": resp.get("physical_type_mapped") or "",
-            "c": city,
-            "g": city.lower(),
-            "e": resp_address.get("street") or "",
-            "r": resp_address.get("province") or "",
-            "o": resp_address.get("post_code") or "",
-            "b": resp_address.get("building_number") or "",
-            "h": resp.get("opening_hours") or "",
-            "i": "[]",  # Unknown
-            "l": {"a": location["latitude"], "o": location["longitude"]},
-            "p": 1 if resp.get("payment_type", {"0": ""}) == "0" else 0,
-            "s": 1,  # Unkown - most lockers have 1 here
-        }
-        return parcel_locker
-
-    async def search_parcel_locker(self, locker_code: str) -> InPostAirPoint | None:
-        """Find info about given parcel locker."""
-        if not locker_code or locker_code == "":
-            return None
-
-        response = await self._request(
-            method="get", url="https://inpost.pl/sites/default/files/points.json"
-        )
-        parcel_locker = next(
-            (
-                x
-                for x in (await response.json()).get("items")
-                if x.get("n") == locker_code
-            ),
-            None,
+        return StoredLockerPoint(
+            code=payload["name"],
+            city=(address.get("city") or "").lower(),
+            street=address.get("street") or "",
+            province=address.get("province") or "",
         )
 
-        if not parcel_locker:
-            parcel_locker = await self._search_easypack24_locker(locker_code)
-
-        return from_dict(InPostAirPoint, parcel_locker) if parcel_locker else None
-
-    async def get_parcel_lockers_list(self) -> list[InPostAirPoint]:
-        """Get parcel lockers list."""
-        response = await self._request(
-            method="get", url="https://inpost.pl/sites/default/files/points.json"
+    async def get_parcel_lockers_list(
+        self, latitude: float, longitude: float
+    ) -> list[NearbyLocker]:
+        """Get parcel lockers ordered by distance from the given coordinates."""
+        query = urlencode(
+            {
+                "type": "parcel_locker_only",
+                "fields": "name,location,location_description,air_index_level",
+                "per_page": 50000,
+            }
         )
-        response_data = from_dict(ParcelLockerListResponse, await response.json())
+        response = await self._request(method="get", url=f"{POINTS_URL}?{query}")
+        lockers = []
 
-        return response_data.items
+        for item in (await response.json())["items"]:
+            if item.get("air_index_level") is None:
+                continue
+
+            location = item.get("location") or {}
+            lat, lon = location.get("latitude"), location.get("longitude")
+
+            if lat is None or lon is None:
+                continue
+
+            lockers.append(
+                NearbyLocker(
+                    name=item["name"],
+                    distance=haversine(longitude, latitude, float(lon), float(lat))
+                    * 1000,
+                    location_description=item.get("location_description"),
+                )
+            )
+
+        return sorted(lockers, key=lambda locker: locker.distance)
 
     async def get_parcel_locker_air_data(
         self, locker_code: str

@@ -2,15 +2,13 @@
 
 from unittest.mock import Mock
 from custom_components.inpost_air.models import (
-    InPostAirPoint,
-    InPostAirPointCoordinates,
     ParcelLocker,
+    StoredLockerPoint,
 )
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.utils import can_be_float, get_device_info, haversine
 from homeassistant.helpers.device_registry import DeviceInfo
 from custom_components.inpost_air.utils import (
-    get_parcel_locker_en_url,
     get_parcel_locker_url,
 )
 
@@ -70,13 +68,11 @@ def test_get_device_info():
     # Create a mock ParcelLocker object
     mock_parcel_locker = Mock(spec=ParcelLocker)
     mock_parcel_locker.locker_code = "ABC123"
-    mock_parcel_locker.locker_id = "123456"
 
     # Expected DeviceInfo
     expected_device_info = DeviceInfo(
         identifiers={
             (DOMAIN, "ABC123"),
-            (DOMAIN, "123456"),
         },
     )
 
@@ -87,27 +83,7 @@ def test_get_device_info():
 def test_get_parcel_locker_url():
     """Test get_parcel_locker_url function."""
 
-    # Create a mock InPostAirPoint object
-    mock_point = Mock(spec=InPostAirPoint)
-    mock_point.n = "KUKU01BAPP"
-    mock_point.t = 1
-    mock_point.d = "Kuków U Żurka"
-    mock_point.m = ""
-    mock_point.q = ""
-    mock_point.f = "006"
-    mock_point.c = "Kuków"
-    mock_point.g = "kukow"
-    mock_point.e = "Kuków"
-    mock_point.r = "małopolskie"
-    mock_point.o = "34-206"
-    mock_point.b = "80"
-    mock_point.h = "24/7"
-    mock_point.i = "[]"
-    mock_point.l = Mock(spec=InPostAirPointCoordinates)
-    mock_point.l.a = 49.74508
-    mock_point.l.o = 19.46535
-    mock_point.p = 0
-    mock_point.s = 1
+    mock_point = StoredLockerPoint("KUKU01BAPP", "kukow", "Kuków", "małopolskie")
 
     expected_path = "paczkomat-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
     expected_url = f"https://inpost.pl/{expected_path}"
@@ -116,25 +92,10 @@ def test_get_parcel_locker_url():
     assert get_parcel_locker_url(mock_point) == expected_url
 
     # Test case: Check slugify handles special characters and lowercase
-    mock_point.g = "GĄ"
-    mock_point.n = "NĘ"
-    mock_point.e = "EŁ"
-    mock_point.r = "RÓ"
+    mock_point.city = "GĄ"
+    mock_point.code = "NĘ"
+    mock_point.street = "EŁ"
+    mock_point.province = "RÓ"
     expected_path_special = "paczkomat-ga-ne-el-paczkomaty-ro"
     expected_url_special = f"https://inpost.pl/{expected_path_special}"
     assert get_parcel_locker_url(mock_point) == expected_url_special
-
-
-def test_get_parcel_locker_en_url():
-    """Test get_parcel_locker_en_url function."""
-
-    mock_point = Mock(spec=InPostAirPoint)
-    mock_point.n = "KUKU01BAPP"
-    mock_point.g = "kuków"
-    mock_point.e = "Kuków"
-    mock_point.r = "małopolskie"
-
-    expected_path = "parcel-locker-kukow-kuku01bapp-kukow-paczkomaty-malopolskie"
-    assert (
-        get_parcel_locker_en_url(mock_point) == f"https://inpost.pl/en/{expected_path}"
-    )

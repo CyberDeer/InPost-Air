@@ -12,10 +12,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
-from custom_components.inpost_air.models import ParcelLocker
+from custom_components.inpost_air.models import ParcelLocker, StoredLockerPoint
 from custom_components.inpost_air.utils import get_device_info, get_parcel_locker_url
 
-from .api import InPostAirApiClientError, InPostAirPoint, InPostApi
+from .api import InPostAirApiClientError, InPostApi
 from .const import DOMAIN
 from . import migration
 
@@ -45,13 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
     device_registry = dr.async_get(hass)
 
     for subentry_id, subentry in entry.subentries.items():
-        point = from_dict(InPostAirPoint, dict(subentry.data["parcel_locker"]))
+        point = from_dict(StoredLockerPoint, dict(subentry.data["parcel_locker"]))
         try:
-            parcel_locker = ParcelLocker(point.n, point.n)
+            parcel_locker = ParcelLocker(point.code)
             coordinator = InPostAirDataCoordinator(hass, api_client, parcel_locker)
             await coordinator.async_config_entry_first_refresh()
         except (InPostAirApiClientError, ConfigEntryNotReady) as ex:
-            _LOGGER.warning("Skipping unavailable parcel locker %s: %s", point.n, ex)
+            _LOGGER.warning("Skipping unavailable parcel locker %s: %s", point.code, ex)
             continue
 
         entry.runtime_data[subentry_id] = InPostAirData(parcel_locker, coordinator)

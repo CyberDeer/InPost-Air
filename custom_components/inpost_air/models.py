@@ -4,10 +4,9 @@ from dataclasses import dataclass
 class ParcelLocker:
     """ParcelLocker class."""
 
-    def __init__(self, locker_code: str, locker_id: str) -> None:
+    def __init__(self, locker_code: str) -> None:
         """Init class."""
         self.locker_code = locker_code
-        self.locker_id = locker_id
 
 
 @dataclass
@@ -25,7 +24,17 @@ class InPostAirPointCoordinates:
 
 
 @dataclass
-class InPostAirPoint:
+class StoredLockerPoint:
+    """Locker details needed after setup, including its configuration link."""
+
+    code: str
+    city: str
+    street: str
+    province: str
+
+
+@dataclass
+class LegacyLockerPoint:
     n: str
     t: int
     d: str

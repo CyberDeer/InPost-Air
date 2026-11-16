@@ -1,7 +1,7 @@
 """Config flow for InPost Air integration."""
 
 from __future__ import annotations
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 
 import logging
 from typing import Any
@@ -19,35 +19,30 @@ from homeassistant.helpers.selector import (
 )
 
 
-from .api import InPostAirPoint, InPostApi
+from .api import InPostApi
 from .const import CONF_PARCEL_LOCKER_ID, DOMAIN
-from .utils import haversine
+from .models import StoredLockerPoint
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class SimpleParcelLocker:
-    code: str
-    description: str
-    distance: float
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> InPostAirPoint:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> StoredLockerPoint:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     api_client = InPostApi(hass)
     parcel_locker = await api_client.search_parcel_locker(
-        data[CONF_PARCEL_LOCKER_ID].upper()
+        data[CONF_PARCEL_LOCKER_ID].strip().upper()
     )
 
     if parcel_locker is None:
         raise UnknownParcelLocker
 
     try:
-        await api_client.get_parcel_locker_air_data(parcel_locker.n)
+        await api_client.get_parcel_locker_air_data(parcel_locker.code)
     except Exception as exc:
         raise ParcelLockerWithoutAirData from exc
 
@@ -58,7 +53,7 @@ class InPostAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Create the single InPost Air entry."""
 
     VERSION = 3
-    MINOR_VERSION = 1
+    MINOR_VERSION = 3
 
     @classmethod
     @callback
@@ -90,7 +85,7 @@ class ParcelLockerSubentryFlow(config_entries.ConfigSubentryFlow):
                 parcel_locker = await validate_input(self.hass, user_input)
 
                 if any(
-                    subentry.unique_id == parcel_locker.n
+                    subentry.unique_id == parcel_locker.code
                     for subentry in self._get_entry().subentries.values()
                 ):
                     return self.async_abort(reason="already_configured")
@@ -100,30 +95,20 @@ class ParcelLockerSubentryFlow(config_entries.ConfigSubentryFlow):
                 errors["base"] = "parcel_locker_no_data"
             else:
                 return self.async_create_entry(
-                    title=f"Parcel locker {parcel_locker.n}",
+                    title=f"Parcel locker {parcel_locker.code}",
                     data={"parcel_locker": asdict(parcel_locker)},
-                    unique_id=parcel_locker.n,
+                    unique_id=parcel_locker.code,
                 )
 
-        parcel_lockers = [
-            SimpleParcelLocker(
-                code=locker.n,
-                description=locker.d,
-                distance=haversine(
-                    self.hass.config.longitude,
-                    self.hass.config.latitude,
-                    locker.l.o,
-                    locker.l.a,
-                ),
-            )
-            for locker in await InPostApi(self.hass).get_parcel_lockers_list()
-        ]
+        parcel_lockers = await InPostApi(self.hass).get_parcel_lockers_list(
+            self.hass.config.latitude, self.hass.config.longitude
+        )
         options = [
             SelectOptionDict(
-                label=f"{locker.code} [{locker.distance:.2f}km] ({locker.description})",
-                value=locker.code,
+                label=f"{locker.name} [{locker.distance / 1000:.2f}km] ({locker.location_description or ''})",
+                value=locker.name,
             )
-            for locker in sorted(parcel_lockers, key=lambda locker: locker.distance)
+            for locker in parcel_lockers
         ]
 
         return self.async_show_form(

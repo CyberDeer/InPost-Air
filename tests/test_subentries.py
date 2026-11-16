@@ -1,11 +1,12 @@
 """Test locker migration and subentry lifecycle."""
 
 from dataclasses import asdict
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -16,9 +17,10 @@ from custom_components.inpost_air import (
     async_migrate_entry,
     config_flow,
 )
-from custom_components.inpost_air.api import InPostApi
+from custom_components.inpost_air.api import InPostApi, NearbyLocker
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.migration import _move_registrations
+from custom_components.inpost_air.models import StoredLockerPoint
 from tests.test_config_flow import mocked_lockers_list
 
 
@@ -119,12 +121,14 @@ async def test_consolidation(hass, version):
     assert await async_setup(hass, {})
     assert hass.config_entries.async_entries(DOMAIN) == [first]
     assert first.version == 3
+    assert first.minor_version == 3
     assert first.data == {}
     assert first.title == "InPost Air"
     assert first.unique_id == DOMAIN
     assert {sub.unique_id for sub in first.subentries.values()} == {"AAA", "BBB"}
     for code, device, entity in [("AAA", device1, entity1), ("BBB", device2, entity2)]:
         sub = next(sub for sub in first.subentries.values() if sub.unique_id == code)
+        assert set(sub.data["parcel_locker"]) == {"code", "city", "street", "province"}
         updated_device = dr.async_get(hass).async_get(device.id)
         # HA reports deprecated property access outside an integration as an
         # error. Keep this assertion on the API supported by older HA versions.
@@ -155,16 +159,52 @@ async def test_future_version(hass):
     assert entry.version == 4
 
 
+@pytest.mark.parametrize("minor_version", [1, 2])
+async def test_existing_subentry_data_is_trimmed(hass, minor_version):
+    """Migrate stored metadata without replacing the subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,
+        minor_version=minor_version,
+        title="InPost Air",
+        data={},
+    )
+    entry.add_to_hass(hass)
+    data = asdict(mocked_lockers_list[0]) | {"unused": "old value"}
+    subentry = ConfigSubentry(
+        data=MappingProxyType({"parcel_locker": data}),
+        subentry_type="parcel_locker",
+        title="Parcel locker AJE01BAPP",
+        unique_id="AJE01BAPP",
+    )
+    hass.config_entries.async_add_subentry(entry, subentry)
+
+    assert await async_migrate_entry(hass, entry)
+    migrated = entry.subentries[subentry.subentry_id]
+    assert migrated.unique_id == subentry.unique_id
+    assert migrated.data["parcel_locker"] == {
+        "code": "AJE01BAPP",
+        "city": "andrzejewo",
+        "street": "Warszawska",
+        "province": "mazowieckie",
+    }
+    assert entry.minor_version == 3
+
+
 async def test_subentry_flow(hass):
     entry = MockConfigEntry(domain=DOMAIN, version=3, title="InPost Air", data={})
     entry.add_to_hass(hass)
     with (
         patch.object(
-            InPostApi, "get_parcel_lockers_list", return_value=mocked_lockers_list
+            InPostApi,
+            "get_parcel_lockers_list",
+            return_value=[NearbyLocker("AJE01BAPP", 1000, "Market Dino")],
         ),
         patch(
             "custom_components.inpost_air.config_flow.validate_input",
-            return_value=mocked_lockers_list[0],
+            return_value=StoredLockerPoint(
+                "AJE01BAPP", "andrzejewo", "Warszawska", "mazowieckie"
+            ),
         ),
     ):
         result = await hass.config_entries.subentries.async_init(
@@ -177,7 +217,12 @@ async def test_subentry_flow(hass):
         assert result["type"] == "create_entry"
         sub = next(iter(entry.subentries.values()))
         assert sub.unique_id == "AJE01BAPP"
-        assert isinstance(sub.data["parcel_locker"], dict)
+        assert sub.data["parcel_locker"] == {
+            "code": "AJE01BAPP",
+            "city": "andrzejewo",
+            "street": "Warszawska",
+            "province": "mazowieckie",
+        }
         result = await hass.config_entries.subentries.async_init(
             (entry.entry_id, "parcel_locker"),
             context={"source": "user"},
@@ -214,7 +259,9 @@ async def test_subentry_validation_errors(hass, error, expected):
     entry.add_to_hass(hass)
     with (
         patch.object(
-            InPostApi, "get_parcel_lockers_list", return_value=mocked_lockers_list
+            InPostApi,
+            "get_parcel_lockers_list",
+            return_value=[NearbyLocker("AJE01BAPP", 1000, "Market Dino")],
         ),
         patch(
             "custom_components.inpost_air.config_flow.validate_input",
