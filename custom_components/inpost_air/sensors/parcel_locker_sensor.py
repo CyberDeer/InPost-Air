@@ -52,7 +52,7 @@ class ParcelLockerSensor(CoordinatorEntity, SensorEntity):
 
         self._device = device
         self.entity_description = entity_description
-        self._attr_native_value = entity_description.value_fn(coordinator.data)
+        self._attr_native_value = entity_description.value_fn(coordinator.data or {})
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{device.locker_code}_{entity_description.key}"
         self._attr_suggested_display_precision = 2
@@ -62,6 +62,6 @@ class ParcelLockerSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
+            self.coordinator.data or {}
         )
         self.async_write_ha_state()

@@ -140,7 +140,6 @@ async def async_setup_entry(
         base_sensors = [
             ParcelLockerSensor(coordinator, parcel_locker, description)
             for description in PARCEL_LOCKER_SENSORS
-            if description.exists_fn(coordinator.data)
         ]
         async_add_entities(
             [

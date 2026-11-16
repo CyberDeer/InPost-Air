@@ -5,7 +5,6 @@ from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -17,40 +16,69 @@ from custom_components.inpost_air import (
     async_migrate_entry,
     config_flow,
 )
-from custom_components.inpost_air.api import InPostApi, NearbyLocker
+from custom_components.inpost_air.api import (
+    AirSensorReading,
+    AirSensorWindow,
+    InPostAirApiClientError,
+    InPostApi,
+    NearbyLocker,
+    ParcelLockerAirDataResponse,
+)
 from custom_components.inpost_air.const import DOMAIN
 from custom_components.inpost_air.migration import _move_registrations
 from custom_components.inpost_air.models import StoredLockerPoint
 from tests.test_config_flow import mocked_lockers_list
 
 
-async def test_setup_isolates_unavailable_locker(hass):
-    """A failed locker must not prevent healthy subentries from loading."""
+def _air_response() -> ParcelLockerAirDataResponse:
+    """Minimal air data payload as returned by the public points API."""
+    return ParcelLockerAirDataResponse(
+        current=AirSensorWindow(
+            fromDateTime="2026-11-12T05:13:57.071Z",
+            tillDateTime="2026-11-12T06:28:57.071Z",
+            values=[AirSensorReading("TEMPERATURE", 7.0)],
+        )
+    )
+
+
+async def test_setup_keeps_unavailable_locker(hass):
+    """A failing locker must not prevent the entry from loading.
+
+    The entry always loads for every configured locker; the failing one
+    recovers on its own once a later coordinator refresh succeeds.
+    """
     entry, _, _ = legacy_entry(hass, "AAA")
     legacy_entry(hass, "BBB")
 
     assert await async_setup(hass, {})
 
-    def fail_unavailable(coordinator):
-        if coordinator.parcel_locker.locker_code == "AAA":
-            raise ConfigEntryNotReady("Air sensors are not available")
+    def air_data(locker_code: str) -> ParcelLockerAirDataResponse:
+        if locker_code == "BBB":
+            raise InPostAirApiClientError("HTTP 500")
+        return _air_response()
 
     with (
-        patch(
-            "custom_components.inpost_air.InPostAirDataCoordinator.async_config_entry_first_refresh",
-            autospec=True,
-            side_effect=fail_unavailable,
-        ),
+        patch.object(InPostApi, "get_parcel_locker_air_data", side_effect=air_data),
+        patch("custom_components.inpost_air.coordinator.MAX_ATTEMPTS", 1),
         patch.object(hass.config_entries, "async_forward_entry_setups") as forward,
     ):
         assert await async_setup_entry(hass, entry)
 
     forward.assert_awaited_once()
 
-    assert [data.parcel_locker.locker_code for data in entry.runtime_data.values()] == [
-        "BBB"
-    ]
+    assert {data.parcel_locker.locker_code for data in entry.runtime_data.values()} == {
+        "AAA",
+        "BBB",
+    }
     assert len(entry.subentries) == 2
+
+    coordinators = {
+        data.parcel_locker.locker_code: data.coordinator
+        for data in entry.runtime_data.values()
+    }
+    assert coordinators["AAA"].last_update_success
+    assert coordinators["AAA"].data is not None
+    assert not coordinators["BBB"].last_update_success
 
 
 @pytest.mark.parametrize("source_subentry_id", [None, "old-subentry"])
