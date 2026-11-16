@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import logging
 from urllib.parse import quote, urlencode
 
-from aiohttp import ClientResponse, ClientResponseError
-from dacite import Config, from_dict
+from aiohttp import ClientError, ClientResponse, ClientResponseError
+from dacite import Config, DaciteError, from_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -108,15 +108,17 @@ class InPostApi:
                 return response
 
         except TimeoutError as e:
-            _LOGGER.warning("Request timed out")
-            raise InPostAirApiClientError("Request timed out") from e
+            _LOGGER.warning("Request timed out: %s", url)
+            raise InPostAirApiClientError(f"Request timed out: {url}") from e
         except ClientResponseError as e:
             if raise_client_response_error:
                 raise
-            raise InPostAirApiClientError("Something really wrong happened!") from e
+            raise InPostAirApiClientError(
+                f"HTTP {e.status} while requesting {url}"
+            ) from e
         except Exception as exception:  # pylint: disable=broad-except
             raise InPostAirApiClientError(
-                "Something really wrong happened!"
+                f"Network error while requesting {url}: {exception}"
             ) from exception
 
     async def search_parcel_locker(self, locker_code: str) -> StoredLockerPoint | None:
@@ -136,14 +138,20 @@ class InPostApi:
 
             raise InPostAirApiClientError("Failed to find parcel locker") from err
 
-        payload = await response.json()
-        address = payload.get("address_details") or {}
+        try:
+            payload = await response.json()
+            code = payload["name"]
+            address = payload.get("address_details") or {}
+        except (ClientError, ValueError, KeyError, TypeError) as err:
+            raise InPostAirApiClientError(
+                f"Unexpected parcel locker payload: {err}"
+            ) from err
 
         return StoredLockerPoint(
-            code=payload["name"],
-            city=(address.get("city") or "").lower(),
-            street=address.get("street") or "",
-            province=address.get("province") or "",
+            code=code,
+            city=str(address.get("city") or "").lower(),
+            street=str(address.get("street") or ""),
+            province=str(address.get("province") or ""),
         )
 
     async def get_parcel_lockers_list(
@@ -158,10 +166,22 @@ class InPostApi:
             }
         )
         response = await self._request(method="get", url=f"{POINTS_URL}?{query}")
+        try:
+            items = (await response.json())["items"]
+        except (ClientError, ValueError, KeyError, TypeError) as err:
+            raise InPostAirApiClientError(f"Unexpected points payload: {err}") from err
+
         lockers = []
 
-        for item in (await response.json())["items"]:
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+
             if item.get("air_index_level") is None:
+                continue
+
+            name = item.get("name")
+            if not name:
                 continue
 
             location = item.get("location") or {}
@@ -172,7 +192,7 @@ class InPostApi:
 
             lockers.append(
                 NearbyLocker(
-                    name=item["name"],
+                    name=name,
                     distance=haversine(longitude, latitude, float(lon), float(lat))
                     * 1000,
                     location_description=item.get("location_description"),
@@ -203,17 +223,24 @@ class InPostApi:
             _LOGGER.warning("Request timed out")
             raise InPostAirApiClientError("Request timed out") from err
         except ClientResponseError as err:
-            raise InPostAirApiClientError("Something really wrong happened!") from err
+            raise InPostAirApiClientError(
+                f"HTTP {err.status} while requesting air data"
+            ) from err
         except Exception as exception:  # pylint: disable=broad-except
             raise InPostAirApiClientError(
-                "Something really wrong happened!"
+                f"Network error while requesting air data: {exception}"
             ) from exception
 
-        return from_dict(
-            ParcelLockerAirDataResponse,
-            payload,
-            config=Config(cast=[float]),
-        )
+        try:
+            return from_dict(
+                ParcelLockerAirDataResponse,
+                payload,
+                config=Config(cast=[float]),
+            )
+        except DaciteError as err:
+            raise InPostAirApiClientError(
+                f"Unexpected air data payload: {err}"
+            ) from err
 
 
 class InPostAirApiClientError(Exception):

@@ -244,3 +244,42 @@ async def test_air_data_http_error(hass):
     with pytest.raises(InPostAirApiClientError) as err:
         await api.get_parcel_locker_air_data("WAW644M")
     assert not isinstance(err.value, InPostAirApiClientSensorsMissingError)
+
+
+async def test_parcel_lockers_list_malformed_payload(hass):
+    """A malformed points payload is a client error, not a KeyError."""
+    response = Mock()
+    response.json = AsyncMock(return_value={"unexpected": []})
+    api = InPostApi(hass)
+    api._request = AsyncMock(return_value=response)
+
+    with pytest.raises(InPostAirApiClientError, match="Unexpected points payload"):
+        await api.get_parcel_lockers_list(52.123, 19.321)
+
+
+async def test_parcel_lockers_list_http_error_message(hass):
+    """HTTP failures name the status and URL instead of a generic message."""
+    response = Mock()
+    response.raise_for_status.side_effect = ClientResponseError(Mock(), (), status=503)
+    api = InPostApi(hass)
+    api.session = Mock()
+    api.session.request = AsyncMock(return_value=response)
+
+    with pytest.raises(InPostAirApiClientError, match="HTTP 503"):
+        await api.get_parcel_lockers_list(52.123, 19.321)
+
+
+async def test_air_data_malformed_payload(hass):
+    """A malformed air-sensors payload is reported as a client error."""
+    response = Mock()
+    response.status = 200
+    response.json = AsyncMock(return_value={"current": {"values": []}})
+    response.raise_for_status = Mock()
+    session = Mock()
+    session.get.return_value.__aenter__ = AsyncMock(return_value=response)
+    session.get.return_value.__aexit__ = AsyncMock(return_value=None)
+
+    api = InPostApi(hass)
+    api.session = session
+    with pytest.raises(InPostAirApiClientError, match="Unexpected air data payload"):
+        await api.get_parcel_locker_air_data("WAW644M")
