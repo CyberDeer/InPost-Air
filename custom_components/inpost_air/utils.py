@@ -39,12 +39,17 @@ def can_be_float(element: str) -> bool:
         return False
 
 
+def get_device_identifiers(parcel_locker: ParcelLocker) -> set[tuple[str, str]]:
+    """Return the device registry identifiers for a parcel locker."""
+    return {(DOMAIN, parcel_locker.locker_code)}
+
+
 def get_device_info(parcel_locker: ParcelLocker) -> DeviceInfo:
     """
     Get the device information for a given parcel locker.
     """
     return DeviceInfo(
-        identifiers={(DOMAIN, parcel_locker.locker_code)},
+        identifiers=get_device_identifiers(parcel_locker),
     )
 
 
