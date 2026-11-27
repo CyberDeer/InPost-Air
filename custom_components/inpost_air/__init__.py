@@ -11,7 +11,10 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from custom_components.inpost_air.coordinator import InPostAirDataCoordinator
 from custom_components.inpost_air.models import ParcelLocker, StoredLockerPoint
-from custom_components.inpost_air.utils import get_device_info, get_parcel_locker_url
+from custom_components.inpost_air.utils import (
+    get_device_identifiers,
+    get_parcel_locker_url,
+)
 
 from .api import InPostApi
 from .const import DOMAIN
@@ -50,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InPostAirConfiEntry) -> 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             config_subentry_id=subentry_id,
-            identifiers=get_device_info(parcel_locker).get("identifiers"),
+            identifiers=get_device_identifiers(parcel_locker),
             name=f"Parcel locker {parcel_locker.locker_code}",
             manufacturer="InPost",
             configuration_url=get_parcel_locker_url(point),
